@@ -292,30 +292,36 @@ Returns:
 def convert_pdf(
     pdf_path: Path,
     output_dir_name: str = None,
+    output_dir: Path = None,
     auto_chunk: bool = None,
     backend: str = "pymupdf",
     pymupdf_mode: str = "text",
     emit_pdf_toc: bool = False,
     emit_page_labels: bool = False,
 ) -> Tuple[str, Path]:
-   # Setup
+   """
+   Convert PDF to JSONL. When output_dir is provided, use it directly (no converted/).
+   Otherwise use root/converted/{output_dir_name or base_name}.
+   """
    root = Path(__file__).parent
-   output_dir = None
    base_name = pdf_path.stem
 
-   if output_dir_name is not None:
-      out_dir = output_dir_name
+   if output_dir is not None:
+      output_dir = Path(output_dir).resolve()
+      output_dir.mkdir(parents=True, exist_ok=True)
+      log_file = output_dir / ".conversion_log.jsonl"
    else:
-      out_dir = input("Enter desired output folder name, or press enter for default: ").strip()
+      if output_dir_name is not None:
+         out_dir = output_dir_name
+      else:
+         out_dir = input("Enter desired output folder name, or press enter for default: ").strip()
+      if out_dir:
+         output_dir = root / 'converted' / Path(out_dir)
+      else:
+         output_dir = root / 'converted' / base_name
+      output_dir.mkdir(parents=True, exist_ok=True)
+      log_file = root / "converted" / "conversion_logs.jsonl"
 
-   if out_dir:
-      output_dir = root / 'converted' / Path(out_dir)
-   else:
-      output_dir = root / 'converted' / base_name
-   output_dir.mkdir(exist_ok=True)
-
-   # Initialize logging
-   log_file = root / "converted" / "conversion_logs.jsonl"
    logger = ConversionLogger(log_file)
 
    # Initialize book record

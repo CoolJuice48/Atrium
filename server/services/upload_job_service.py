@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 # Job states
 QUEUED = "queued"
@@ -100,6 +103,11 @@ def _record_upload(user_id: str) -> None:
     _user_upload_timestamps[user_id].append(now)
 
 
+def _sanitize_error(exc: BaseException) -> str:
+    """Return a user-safe message without absolute paths."""
+    return "A processing error occurred. Please try again."
+
+
 def run_upload_job(
     job_id: str,
     pdf_path: Path,
@@ -123,6 +131,21 @@ def run_upload_job(
             job.total = max(total, 1)
 
     try:
+        from scripts.ingest_library import (
+            _atomic_write,
+            _sha256_file,
+            _sections_to_chunks_jsonl,
+        )
+
+        base_name = pdf_path.stem
+        book_id = _sha256_file(pdf_path)
+        index_root = Path(index_root).resolve()
+        uploads_root = Path(uploads_root).resolve()
+
+        # Per-user, per-book staging under user library root (no converted/)
+        staging_dir = uploads_root / "users" / owner_id / "user_library" / "books" / book_id
+        staging_dir.mkdir(parents=True, exist_ok=True)
+
         # Get page count for progress (fast)
         page_count = 0
         try:
@@ -141,11 +164,9 @@ def run_upload_job(
 
         from pdf_to_jsonl import convert_pdf
 
-        base_name = pdf_path.stem
-        out_dir_name = (display_title or base_name).replace(" ", "_")[:80]
         _doc_id, output_dir = convert_pdf(
             pdf_path,
-            output_dir_name=out_dir_name,
+            output_dir=staging_dir,
             auto_chunk=True,
             backend="pymupdf",
             pymupdf_mode="text",
@@ -165,15 +186,7 @@ def run_upload_job(
             job.error = "No sections file produced"
             return
 
-        # Chunking
-        from scripts.ingest_library import (
-            _atomic_write,
-            _sha256_file,
-            _sections_to_chunks_jsonl,
-        )
-
-        book_id = _sha256_file(pdf_path)
-        index_root = Path(index_root).resolve()
+        # Chunking: write chunks.jsonl to staging_dir (per-user), then copy to index for search
         books_dir = index_root / "books"
         book_dir = books_dir / book_id
         book_dir.mkdir(parents=True, exist_ok=True)
@@ -192,9 +205,14 @@ def run_upload_job(
             if (i + 1) % 10 == 0 or i == total_chunks - 1:
                 emit(CHUNKING, f"Chunking...", i + 1, total_chunks)
 
-        chunks_path = book_dir / "chunks.jsonl"
         lines = [json.dumps(c, ensure_ascii=False) + "\n" for c in chunks]
-        _atomic_write(chunks_path, "".join(lines))
+        chunks_content = "".join(lines)
+        # Write to staging_dir (per-user extraction artifact)
+        staging_chunks = staging_dir / "chunks.jsonl"
+        _atomic_write(staging_chunks, chunks_content)
+        # Copy to index for search
+        chunks_path = book_dir / "chunks.jsonl"
+        _atomic_write(chunks_path, chunks_content)
 
         # Copy source
         tmp_pdf = book_dir / "source.pdf.tmp"
@@ -287,6 +305,7 @@ def run_upload_job(
         _record_upload(owner_id)
 
     except Exception as e:
+        logger.exception("Upload job %s failed", job_id)
         job.status = FAILED
-        job.error = str(e)
-        job.message = str(e)
+        job.error = _sanitize_error(e)
+        job.message = _sanitize_error(e)

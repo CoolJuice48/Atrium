@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -206,3 +207,113 @@ def test_upload_file_size_limit():
             assert "too large" in r.json().get("detail", "").lower()
         finally:
             app.dependency_overrides.clear()
+
+
+def test_upload_job_succeeds_without_converted_folder():
+    """Upload job completes successfully without a pre-existing converted/ folder."""
+    reset_engine()
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        db_path = tmp_path / "test.db"
+        uploads_root = tmp_path / "uploads"
+        index_root = tmp_path / "index"
+        index_root.mkdir()
+        # Explicitly do NOT create converted/
+        assert not (tmp_path / "converted").exists()
+
+        pdf_path = uploads_root / "users" / "user-1" / "job123.pdf"
+        pdf_path.parent.mkdir(parents=True, exist_ok=True)
+        pdf_path.write_bytes(b"%PDF-1.4 minimal content for hashing")
+
+        os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+        settings = Settings(uploads_root=uploads_root, index_root=index_root)
+        init_db(settings)
+        app.dependency_overrides[get_settings] = lambda: settings
+
+        job = ujs.create_job("user-1", "doc.pdf", "My Doc")
+        job_id = job.job_id
+
+        # Fixed book_id for predictable staging path
+        fixed_book_id = "a" * 64
+        staging_dir = uploads_root / "users" / "user-1" / "user_library" / "books" / fixed_book_id
+        assert not staging_dir.exists(), "Staging dir must not exist before job (tests mkdir)"
+
+        def mock_convert(pdf_path_arg, output_dir=None, **kwargs):
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            base = pdf_path_arg.stem
+            chunked = output_dir / f"{base}_SectionsWithText_Chunked.jsonl"
+            rec = {
+                "text": "sample chunk",
+                "book_name": base,
+                "chapter_number": "1",
+                "section_number": "1",
+                "section_title": "Intro",
+                "page_start": 1,
+                "page_end": 1,
+                "chunk_index": 0,
+                "total_chunks": 1,
+                "word_count": 2,
+            }
+            chunked.write_text(json.dumps(rec) + "\n")
+            return ("doc-uuid", output_dir)
+
+        try:
+            with patch("pdf_to_jsonl.convert_pdf", side_effect=mock_convert):
+                with patch("scripts.ingest_library._sha256_file", return_value=fixed_book_id):
+                    with patch("server.services.upload_job_service._check_cancelled", return_value=False):
+                        with patch("scripts.ingest_library.rebuild_search_index"):
+                            ujs.run_upload_job(
+                                job_id,
+                                pdf_path,
+                                index_root,
+                                uploads_root,
+                                "My Doc",
+                                "user-1",
+                            )
+
+            job = ujs.get_job(job_id)
+            assert job is not None
+            assert job.status == "completed"
+            assert job.error is None
+
+            assert staging_dir.exists()
+            assert (staging_dir / "chunks.jsonl").exists()
+
+            book_dir = index_root / "books" / fixed_book_id
+            assert book_dir.exists()
+            assert (book_dir / "chunks.jsonl").exists()
+            assert (book_dir / "book.json").exists()
+        finally:
+            app.dependency_overrides.clear()
+
+
+def test_upload_job_fs_error_returns_sanitized_message():
+    """On filesystem error, job gets sanitized error (no absolute paths)."""
+    reset_engine()
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        uploads_root = tmp_path / "uploads"
+        index_root = tmp_path / "index"
+        index_root.mkdir()
+        pdf_path = uploads_root / "users" / "u1" / "j.pdf"
+        pdf_path.parent.mkdir(parents=True, exist_ok=True)
+        pdf_path.write_bytes(b"%PDF-1.4 x")
+
+        job = ujs.create_job("u1", "j.pdf", "J")
+        job_id = job.job_id
+
+        def mock_convert(*args, **kwargs):
+            raise OSError(f"Cannot write to /Users/secret/path/to/file.pdf")
+
+        with patch("pdf_to_jsonl.convert_pdf", side_effect=mock_convert):
+            with patch("scripts.ingest_library._sha256_file", return_value="b" * 64):
+                ujs.run_upload_job(job_id, pdf_path, index_root, uploads_root, "J", "u1")
+
+        job = ujs.get_job(job_id)
+        assert job is not None
+        assert job.status == "failed"
+        assert job.error is not None
+        assert "/Users/" not in job.error
+        assert "secret" not in job.error
+        assert "path" not in job.error or job.error == "A processing error occurred. Please try again."
