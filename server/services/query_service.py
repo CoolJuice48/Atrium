@@ -218,11 +218,20 @@ def answer_question_offline(
         }
 
     # Filter structural (TOC/index) chunks from answer composition when better content exists
-    from server.services.structural_chunk import partition_chunks
+    from server.services.structural_chunk import partition_chunks, is_summary_type_question
     explanatory, structural = partition_chunks(results, question)
     chunks_for_compose = explanatory if explanatory else results
 
-    composed = compose_answer(question, chunks_for_compose)
+    if is_summary_type_question(question):
+        from server.services.summary_compose import compose_summary_from_chunks
+        composed = compose_summary_from_chunks(
+            chunks_for_compose,
+            question,
+            max_chunks=12,
+            max_bullets=10,
+        )
+    else:
+        composed = compose_answer(question, chunks_for_compose)
 
     if graph_path is not None and runtime is not None:
         _update_graph(question, composed, chunks_for_compose, runtime)
