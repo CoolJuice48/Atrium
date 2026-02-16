@@ -217,19 +217,24 @@ def answer_question_offline(
             'meta': meta,
         }
 
-    composed = compose_answer(question, results)
+    # Filter structural (TOC/index) chunks from answer composition when better content exists
+    from server.services.structural_chunk import partition_chunks
+    explanatory, structural = partition_chunks(results, question)
+    chunks_for_compose = explanatory if explanatory else results
+
+    composed = compose_answer(question, chunks_for_compose)
 
     if graph_path is not None and runtime is not None:
-        _update_graph(question, composed, results, runtime)
+        _update_graph(question, composed, chunks_for_compose, runtime)
     elif graph_path is not None:
-        _update_graph_legacy(question, composed, results, graph_path)
+        _update_graph_legacy(question, composed, chunks_for_compose, graph_path)
 
     if save_last_answer:
-        _save_last_answer(question, composed, results, index_path)
+        _save_last_answer(question, composed, chunks_for_compose, index_path)
 
     # Enrich retrieved_chunks with book_id, title, superseded, lineage
     enriched = []
-    for r in results[:3]:
+    for r in chunks_for_compose[:3]:
         meta_dict = dict(r.get('metadata', r))
         bid = meta_dict.get('book_id')
         if bid and bid in book_meta_map:
