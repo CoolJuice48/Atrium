@@ -27,6 +27,8 @@ make setup
 make run
 ```
 
+Put PDFs in `./pdfs` and `make run` will auto-build the search index if it doesn't exist. Or run `make index` manually.
+
 Then open:
 - **App**: http://localhost:3000
 - **API docs**: http://localhost:8000/docs
@@ -43,12 +45,9 @@ Then open:
 Atrium does **not** ship with textbook content. You provide your own.
 
 1. Place your PDFs in `pdfs/`
-
-2. From the repo root, run:
-   make backend
-   python run_pipeline.py
-
-3. Or use the minimal demo index (see [docs/USAGE.md](docs/USAGE.md))
+2. Run `make run` — the index is built automatically from `pdfs/` if missing.
+3. Or run `make index` manually, then `make run`.
+4. For full pipeline (Q&A extraction, question banks), use `python run_pipeline.py` (see [docs/USAGE.md](docs/USAGE.md)).
 
 **Content policy**: Use only content you have rights to (your notes, public domain, or licensed materials). No copyrighted textbooks are included.
 

@@ -1,5 +1,6 @@
 """Configuration for the Atrium API server."""
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -23,7 +24,8 @@ class Settings:
         project_root = Path(__file__).resolve().parent.parent
 
         if self.index_root is None:
-            self.index_root = project_root / 'textbook_index'
+            env_root = os.environ.get("INDEX_ROOT")
+            self.index_root = Path(env_root) if env_root else project_root / "textbook_index"
         self.index_root = Path(self.index_root)
 
         if self.study_db_path is None:

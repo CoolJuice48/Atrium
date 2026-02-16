@@ -9,6 +9,8 @@ make setup
 make run
 ```
 
+Put PDFs in `./pdfs` and `make run` will auto-build the search index if it doesn't exist. Or run `make index` manually.
+
 Then open:
 - **Frontend**: http://localhost:3000
 - **API docs**: http://localhost:8000/docs
@@ -17,7 +19,13 @@ Then open:
 
 Atrium does **not** ship with textbook content. You provide your own materials.
 
-### Option 1: Use the pipeline (PDF → index)
+### Option 1: Auto-build from PDFs (recommended)
+
+1. Place PDFs in `pdfs/`
+2. Run `make run` — the index is built automatically if missing.
+3. Or run `make index` manually, then `make run`.
+
+### Option 2: Full pipeline (Q&A, question banks)
 
 1. Place PDFs in `pdfs/`
 2. Run the pipeline:
@@ -27,12 +35,12 @@ Atrium does **not** ship with textbook content. You provide your own materials.
    ```
 3. Choose **[P] Process** and follow the menu to convert, classify, build corpus, and embed.
 
-### Option 2: Minimal demo index (tests)
+### Option 3: Minimal demo index (tests)
 
 The tests build a minimal 3-doc index. For a quick demo:
 
 1. Run the server; it will use `textbook_index/` if present.
-2. If `textbook_index/` is empty, the `/catalog` and `/query` endpoints will return empty or error until you add content via the pipeline.
+2. If `textbook_index/` is empty and no PDFs are in `pdfs/`, the `/catalog` and `/query` endpoints will return empty until you add PDFs and run `make index` (or `make run`).
 
 ### Content policy
 
