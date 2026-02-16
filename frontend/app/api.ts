@@ -90,7 +90,7 @@ export interface ProgressResponse {
 
 // ---- API functions ----
 
-export function getHealth(): Promise<{ status: string }> {
+export function getHealth(): Promise<{ ok: boolean }> {
   return request("/health");
 }
 

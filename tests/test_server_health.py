@@ -19,4 +19,4 @@ def test_health_returns_200():
 
 def test_health_body():
     resp = client.get("/health")
-    assert resp.json() == {"status": "ok"}
+    assert resp.json() == {"ok": True}

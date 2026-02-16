@@ -1,6 +1,9 @@
 """FastAPI application -- routes for the Atrium learning platform."""
 
+import logging
 import sys
+from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 _project_root = str(Path(__file__).resolve().parent.parent)
@@ -31,7 +34,22 @@ from server.services import eval_service, query_service, study_service
 from server.__version__ import __version__
 from study.storage import CardStore
 
-app = FastAPI(title="Atrium", version=__version__)
+logger = logging.getLogger("atrium")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan: no heavy work. Runtime/index built lazily on first request."""
+    ts = datetime.utcnow().isoformat() + "Z"
+    logger.info("[%s] Startup: begin (no index/engine load)", ts)
+    print(f"[{ts}] Startup: begin (no index/engine load)")
+    yield
+    ts_end = datetime.utcnow().isoformat() + "Z"
+    logger.info("[%s] Shutdown: complete", ts_end)
+    print(f"[{ts_end}] Shutdown: complete")
+
+
+app = FastAPI(title="Atrium", version=__version__, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,22 +60,30 @@ app.add_middleware(
 )
 
 
-# ---- Health ----
+# ---- Health (no dependencies, always fast) ----
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Minimal health check. No deps, no index load. Always returns immediately."""
+    return {"ok": True}
 
 
-# ---- Catalog ----
+# ---- Catalog (lazy: loads index on first request) ----
 
 @app.get("/catalog", response_model=CatalogResponse)
 def catalog(settings: Settings = Depends(get_settings)):
-    result = query_service.get_catalog(str(settings.index_root))
-    return result
+    try:
+        result = query_service.get_catalog(str(settings.index_root))
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Index unavailable at {settings.index_root}. "
+            f"Build the index first (run_pipeline.py) or check INDEX_ROOT. Error: {e!s}",
+        )
 
 
-# ---- Query ----
+# ---- Query (lazy: loads index on first request) ----
 
 @app.post("/query", response_model=QueryResponse)
 def query(
@@ -65,15 +91,22 @@ def query(
     settings: Settings = Depends(get_settings),
     runtime=Depends(get_runtime),
 ):
-    result = query_service.answer_question_offline(
-        body.question,
-        book=body.book,
-        top_k=body.top_k,
-        index_root=str(settings.index_root),
-        graph_path=settings.graph_registry_path,
-        save_last_answer=body.save_last_answer,
-        runtime=runtime,
-    )
+    try:
+        result = query_service.answer_question_offline(
+            body.question,
+            book=body.book,
+            top_k=body.top_k,
+            index_root=str(settings.index_root),
+            graph_path=settings.graph_registry_path,
+            save_last_answer=body.save_last_answer,
+            runtime=runtime,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Index unavailable at {settings.index_root}. "
+            f"Build the index first (run_pipeline.py) or check INDEX_ROOT. Error: {e!s}",
+        )
     answer_dict = result['answer_dict']
     return {
         'question': result['question'],
