@@ -5,7 +5,7 @@ Minimal Next.js (TypeScript) frontend for the Atrium learning platform. One page
 ## Prerequisites
 
 - Node.js 18+
-- Atrium FastAPI backend running (see `pdf_processor/`)
+- Atrium FastAPI backend running (see repo root)
 
 ## Setup
 

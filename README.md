@@ -42,12 +42,10 @@ Then open:
 
 Atrium does **not** ship with textbook content. You provide your own.
 
-1. Place your PDFs in:
-   pdf_processor/pdfs/
+1. Place your PDFs in `pdfs/`
 
 2. From the repo root, run:
    make backend
-   cd pdf_processor
    python run_pipeline.py
 
 3. Or use the minimal demo index (see [docs/USAGE.md](docs/USAGE.md))
@@ -58,7 +56,7 @@ Atrium does **not** ship with textbook content. You provide your own.
 
 | Path | Description |
 |------|-------------|
-| `pdf_processor/` | Backend (FastAPI, Python) |
+| `server/`, `study/`, `graph/`, `rag/`, `legacy/` | Backend (FastAPI, Python) |
 | `frontend/` | Next.js app |
 | `docs/` | Architecture, usage, dev guides |
 

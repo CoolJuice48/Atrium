@@ -50,7 +50,7 @@ def main():
 
     backend = subprocess.Popen(
         [str(uvicorn), "server.app:app", "--reload", "--host", "0.0.0.0", "--port", str(BACKEND_PORT)],
-        cwd=ROOT / "pdf_processor",
+        cwd=ROOT,
         env=env,
     )
 

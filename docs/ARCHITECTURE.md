@@ -6,17 +6,21 @@ High-level overview of the codebase modules.
 
 ```
 Atrium/
-├── pdf_processor/          # Backend (Python)
-│   ├── server/            # FastAPI API
-│   ├── legacy/            # PDF extraction, search (TF-IDF)
-│   ├── extractors/        # PDF backends (PyMuPDF)
-│   ├── rag/               # RAG pipeline (corpus, embedding, index)
-│   ├── study/             # Spaced repetition, cards, scheduler
-│   ├── graph/             # Concept-question graph
-│   ├── eval/               # Evaluation harness
-│   └── scripts/           # CLI scripts (build_index, embed_chunks, etc.)
-├── frontend/              # Next.js (TypeScript)
-└── docs/                  # Documentation
+├── server/                 # FastAPI API
+├── legacy/                 # PDF extraction, search (TF-IDF)
+├── extractors/             # PDF backends (PyMuPDF)
+├── rag/                    # RAG pipeline (corpus, embedding, index)
+├── study/                  # Spaced repetition, cards, scheduler
+├── graph/                  # Concept-question graph
+├── eval/                   # Evaluation harness
+├── scripts/                # CLI scripts (build_index, embed_chunks, dev, etc.)
+├── tests/                  # Pytest tests
+├── frontend/               # Next.js (TypeScript)
+├── docs/                   # Documentation
+├── main.py                 # Pipeline entry (delegates to run_pipeline)
+├── run_pipeline.py         # PDF → index workflow
+├── pdf_to_jsonl.py         # PDF conversion
+└── id_factory.py           # ID generation
 ```
 
 ## Modules
@@ -66,6 +70,6 @@ Atrium/
 ## Key entry points
 
 - **API**: `uvicorn server.app:app` (port 8000)
-- **Pipeline**: `python run_pipeline.py` or `python -m pdf_processor.main`
+- **Pipeline**: `python run_pipeline.py` or `python main.py`
 - **Study CLI**: `python -m study.cli`
 - **Graph CLI**: `python -m graph.cli`

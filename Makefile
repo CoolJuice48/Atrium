@@ -24,4 +24,4 @@ run:
 	@make -j2 backend frontend
 
 test:
-	. $(VENV)/bin/activate && pytest -q
+	$(VENV)/bin/python -m pytest tests/ -q

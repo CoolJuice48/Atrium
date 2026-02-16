@@ -21,8 +21,7 @@ make run      # Start backend + frontend
 ### Python (backend)
 
 ```bash
-cd pdf_processor
-source ../.venv/bin/activate   # or: .venv\Scripts\activate on Windows
+source .venv/bin/activate   # or: .venv\Scripts\activate on Windows
 python -m pytest tests/ -v
 ```
 

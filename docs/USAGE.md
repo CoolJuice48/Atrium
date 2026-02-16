@@ -19,11 +19,10 @@ Atrium does **not** ship with textbook content. You provide your own materials.
 
 ### Option 1: Use the pipeline (PDF → index)
 
-1. Place PDFs in `pdf_processor/pdfs/`
+1. Place PDFs in `pdfs/`
 2. Run the pipeline:
    ```bash
-   cd pdf_processor
-   source ../.venv/bin/activate
+   source .venv/bin/activate
    python run_pipeline.py
    ```
 3. Choose **[P] Process** and follow the menu to convert, classify, build corpus, and embed.

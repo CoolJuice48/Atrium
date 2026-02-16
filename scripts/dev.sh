@@ -33,6 +33,6 @@ echo ""
 
 # Run both (trap to kill children on exit)
 trap 'kill $(jobs -p) 2>/dev/null' EXIT
-(cd pdf_processor && ../.venv/bin/uvicorn server.app:app --reload --host 0.0.0.0 --port "$BACKEND_PORT") &
+(.venv/bin/uvicorn server.app:app --reload --host 0.0.0.0 --port "$BACKEND_PORT") &
 (cd "$ROOT/frontend" && NEXT_PUBLIC_API_BASE="$NEXT_PUBLIC_API_BASE" npm run dev -- -p "$FRONTEND_PORT") &
 wait

@@ -24,7 +24,7 @@ $venvUvicorn = Join-Path $Root ".venv\Scripts\uvicorn.exe"
 
 $backendJob = Start-Job -ScriptBlock {
     param($uvicorn, $port)
-    Set-Location (Join-Path $using:Root "pdf_processor")
+    Set-Location $using:Root
     & $uvicorn server.app:app --reload --host 0.0.0.0 --port $port
 } -ArgumentList $venvUvicorn, $BackendPort
 

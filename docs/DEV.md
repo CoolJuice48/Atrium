@@ -9,7 +9,7 @@ make setup
 ```
 
 This:
-- Creates `.venv` and installs Python deps (`pdf_processor/requirements.txt`)
+- Creates `.venv` and installs Python deps (`requirements.txt`)
 - Runs `npm install` in `frontend/`
 
 ## Running locally
@@ -34,8 +34,7 @@ make test
 ```
 
 Runs:
-- `python -m pytest tests/` (from `pdf_processor/`)
-- Optional: `npm run build` in frontend (TypeScript check)
+- `python -m pytest tests/` (from repo root)
 
 ## Common commands
 
@@ -49,7 +48,7 @@ Runs:
 
 ## Python
 
-- **CWD**: Run server/tests from `pdf_processor/` (or set `PYTHONPATH`)
+- **CWD**: Run server/tests from repo root
 - **Venv**: `.venv` at repo root
 - **Tests**: `python -m pytest tests/ -v`
 
