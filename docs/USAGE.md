@@ -9,7 +9,9 @@ make setup
 make run
 ```
 
-Put PDFs in `./pdfs` and `make run` will auto-build the search index if it doesn't exist. Or run `make index` manually.
+**First run**: Put PDFs in `./pdfs`, then either:
+- `make run-bootstrap` — builds the index if missing, then starts the app
+- Or `make run` and click **Build Index** in the UI
 
 Then open:
 - **Frontend**: http://localhost:3000
@@ -19,11 +21,11 @@ Then open:
 
 Atrium does **not** ship with textbook content. You provide your own materials.
 
-### Option 1: Auto-build from PDFs (recommended)
+### Option 1: Build Index (recommended)
 
 1. Place PDFs in `pdfs/`
-2. Run `make run` — the index is built automatically if missing.
-3. Or run `make index` manually, then `make run`.
+2. Run `make run-bootstrap` (builds index if missing, then starts app), or `make run` and click **Build Index** in the UI
+3. Or run `make index` manually, then `make run`
 
 ### Option 2: Full pipeline (Q&A, question banks)
 
@@ -44,12 +46,13 @@ The tests build a minimal 3-doc index. For a quick demo:
 
 ### Content policy
 
-- Use only content you have rights to (e.g. your own notes, public domain, or licensed materials).
+- Use only content you have rights to — Creative Commons, public domain, or your own materials.
 - No copyrighted textbooks are included by default.
 
 ## Using the app
 
 ### Ask panel
+- If no index exists, the panel shows "No index yet. Build it to ask questions." Use the Build Index panel above.
 - Type a question and click **Ask**
 - Optionally filter by book
 - After an answer, click **Generate study cards from answer** to create flashcards

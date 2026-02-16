@@ -77,6 +77,68 @@ body {
   color: var(--error);
 }
 
+.status-chip.warn {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.auth-panel {
+  max-width: 360px;
+}
+
+.auth-form label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.upload-hero-panel {
+  border: 2px dashed var(--border);
+}
+
+.upload-dropzone {
+  padding: 24px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-over {
+  background: #f0f7ff;
+  border-color: var(--accent);
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
 /* ---- Tabs ---- */
 
 .tabs {
@@ -320,6 +382,16 @@ button.secondary:hover {
   margin-top: 6px;
 }
 
+/* ---- Exam ---- */
+
+.exam-question {
+  background: var(--surface);
+}
+
+.exam-block .answer-text {
+  white-space: pre-wrap;
+}
+
 /* ---- Progress ---- */
 
 .mastery-bar {
@@ -386,6 +458,10 @@ th {
 }
 
 /* ---- Utilities ---- */
+
+.success {
+  color: var(--success);
+}
 
 .error {
   color: var(--error);

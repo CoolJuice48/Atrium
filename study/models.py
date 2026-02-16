@@ -77,3 +77,20 @@ def make_card_id(prompt: str, citation_chunk_ids: List[str]) -> str:
     """
     key = prompt.strip().lower() + '|' + '|'.join(sorted(citation_chunk_ids))
     return hashlib.sha256(key.encode('utf-8')).hexdigest()[:16]
+
+
+def make_structure_card_id(
+    card_type: str,
+    normalized_prompt: str,
+    chunk_id: str,
+    term: Optional[str] = None,
+) -> str:
+    """
+    Stable ID for structure-first cards. Re-running generation yields same IDs.
+    Based on (card_type, normalized_prompt, chunk_id, optional term).
+    """
+    parts = [card_type, normalized_prompt.strip().lower(), chunk_id]
+    if term:
+        parts.append(term.strip().lower())
+    key = '|'.join(parts)
+    return hashlib.sha256(key.encode('utf-8')).hexdigest()[:16]

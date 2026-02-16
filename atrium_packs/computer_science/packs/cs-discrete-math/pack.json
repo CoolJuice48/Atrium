@@ -1,0 +1,15 @@
+{
+  "pack_id": "cs-discrete-math",
+  "version": "1.0.0",
+  "title": "Discrete Mathematics",
+  "description": "Discrete math for computer science",
+  "path_id": "computer_science_core",
+  "module": {
+    "id": "cs-discrete-math",
+    "title": "Discrete Math",
+    "order": 2,
+    "prereqs": ["cs-foundations"]
+  },
+  "allowed_licenses": ["PUBLIC_DOMAIN", "CC0", "CC BY 4.0", "CC BY-SA 4.0"],
+  "books": []
+}

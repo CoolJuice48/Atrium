@@ -90,10 +90,13 @@ def _build_mini_index(index_dir: Path):
         pickle.dump(vectors, f)
 
 
-def _override_settings(index_dir: Path):
+def _override_settings(index_dir: Path, pdf_dir: Path = None):
     """Return a Settings override pointing at index_dir."""
+    if pdf_dir is None:
+        pdf_dir = index_dir / 'pdfs'
     return Settings(
         index_root=index_dir,
+        pdf_dir=pdf_dir,
         study_db_path=index_dir / 'study_cards.jsonl',
         session_log_path=index_dir / 'session_log.jsonl',
         graph_registry_path=index_dir / 'graph_registry.json',

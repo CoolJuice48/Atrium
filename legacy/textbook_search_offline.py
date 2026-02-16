@@ -626,7 +626,7 @@ class TextbookSearchOffline:
                new_docs.append(section['text'])
                
                # Store metadata
-               new_metas.append({
+               meta = {
                   'book': section.get('book_name', book_name),
                   'chapter': str(section.get('chapter_number', 'unknown')),
                   'section': section.get('section_number', ''),
@@ -635,7 +635,10 @@ class TextbookSearchOffline:
                   'chunk_index': section.get('chunk_index', 0),
                   'total_chunks': section.get('total_chunks', 1),
                   'word_count': section.get('word_count', 0)
-               })
+               }
+               if section.get('book_id'):
+                  meta['book_id'] = section['book_id']
+               new_metas.append(meta)
                
                if (i + 1) % 50 == 0:
                   print(f"  Loaded {i + 1} chunks...")
@@ -659,6 +662,7 @@ class TextbookSearchOffline:
       query: str,
       n_results: int = 5,
       book_filter: Optional[str] = None,
+      book_ids: Optional[List[str]] = None,
       chapter_filter: Optional[str] = None
    ) -> List[Dict]:
       """
@@ -667,11 +671,12 @@ class TextbookSearchOffline:
       Args:
          query: Natural language question
          n_results: How many results to return
-         book_filter: Optional - only search specific book
+         book_filter: Optional - only search specific book (by display name)
+         book_ids: Optional - only search books with these book_ids
          chapter_filter: Optional - only search specific chapter
       
       Returns:
-         List of search results with text and metadata
+         List of search results with text, metadata, and similarity score
       """
       if len(self.documents) == 0:
          return []
@@ -686,6 +691,10 @@ class TextbookSearchOffline:
       valid_indices = []
       for i, meta in enumerate(self.metadatas):
          if book_filter and meta['book'] != book_filter:
+               continue
+         if book_ids is not None and len(book_ids) > 0:
+            bid = meta.get('book_id')
+            if bid not in book_ids:
                continue
          if chapter_filter and meta['chapter'] != str(chapter_filter):
                continue

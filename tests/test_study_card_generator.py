@@ -5,7 +5,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from study.card_generator import generate_cards, _extract_tags, _make_citations_from_chunks
+from study.card_generator import (
+    generate_cards,
+    generate_cards_from_chunks,
+    generate_practice_exam,
+    postprocess_cards,
+    _extract_tags,
+    _make_citations_from_chunks,
+)
 from study.card_types import CardType
 from study.models import make_card_id
 
@@ -178,3 +185,132 @@ def test_short_answer_fallback():
     assert CardType.SHORT_ANSWER.value in types
     # Should NOT have a definition card
     assert CardType.DEFINITION.value not in types
+
+
+# ---- Structure-first generation tests ----
+
+def _chunk(text: str, chunk_id: str = "c1") -> dict:
+    """Fixture chunk with metadata."""
+    return {
+        "text": text,
+        "metadata": {"chunk_id": chunk_id, "book": "TestBook", "section_title": "Test"},
+    }
+
+
+def test_definition_lowercase_pattern():
+    """Chunk with 'X is defined as' generates a DEFINITION card."""
+    chunks = [
+        _chunk(
+            "Reinforcement is defined as a learning paradigm where agents learn from rewards.",
+            "ch1",
+        )
+    ]
+    cards = generate_cards_from_chunks(chunks, max_cards=10, seed=42)
+    def_cards = [c for c in cards if c.card_type == CardType.DEFINITION.value]
+    assert len(def_cards) >= 1
+    assert "reinforcement" in def_cards[0].prompt.lower() or "Reinforcement" in def_cards[0].prompt
+    assert "reward" in def_cards[0].answer.lower()
+
+
+def test_list_card_generation():
+    """Chunk with 3+ bullet items generates LIST card."""
+    chunks = [
+        _chunk(
+            "Key steps:\n- First, gather data.\n- Second, train the model.\n- Third, evaluate.",
+            "ch2",
+        )
+    ]
+    cards = generate_cards_from_chunks(chunks, max_cards=10, seed=42)
+    list_cards = [c for c in cards if c.card_type == CardType.LIST.value]
+    assert len(list_cards) >= 1
+    assert "List" in list_cards[0].prompt or "list" in list_cards[0].prompt.lower()
+    assert "gather" in list_cards[0].answer or "First" in list_cards[0].answer
+
+
+def test_true_false_generation():
+    """Chunk with declarative sentence generates TRUE_FALSE card."""
+    chunks = [
+        _chunk(
+            "Introduction. Gradient descent is an iterative optimization algorithm used to minimize a loss function by updating parameters in the direction of steepest descent.",
+            "ch3",
+        )
+    ]
+    cards = generate_cards_from_chunks(chunks, max_cards=10, seed=42)
+    tf_cards = [c for c in cards if c.card_type == CardType.TRUE_FALSE.value]
+    assert len(tf_cards) >= 1
+    assert "True or False" in tf_cards[0].prompt
+    assert "True" in tf_cards[0].answer
+
+
+def test_exam_blueprint_respected():
+    """Exam generation matches blueprint counts or documents fallback."""
+    chunks = [
+        _chunk("Term A is defined as the first concept. Term B means the second concept.", "c1"),
+        _chunk("Steps:\n- One\n- Two\n- Three\n- Four", "c2"),
+    ]
+    blueprint = {
+        CardType.DEFINITION.value: 2,
+        CardType.LIST.value: 1,
+        CardType.SHORT_ANSWER.value: 2,
+    }
+    exam = generate_practice_exam(chunks, exam_size=10, blueprint=blueprint, seed=123)
+    assert "questions" in exam
+    assert "meta" in exam
+    assert "counts_by_type" in exam["meta"]
+    counts = exam["meta"]["counts_by_type"]
+    assert counts.get(CardType.DEFINITION.value, 0) <= 2
+    assert counts.get(CardType.LIST.value, 0) <= 1
+
+
+def test_stable_card_ids():
+    """Running generator twice yields same IDs; no duplicates."""
+    chunks = [
+        _chunk("Reinforcement is defined as reward-based learning.", "ch1"),
+        _chunk("Steps:\n- A\n- B\n- C", "ch2"),
+    ]
+    cards1 = generate_cards_from_chunks(chunks, max_cards=10, seed=99)
+    cards2 = generate_cards_from_chunks(chunks, max_cards=10, seed=99)
+    ids1 = [c.card_id for c in cards1]
+    ids2 = [c.card_id for c in cards2]
+    assert ids1 == ids2
+    assert len(ids1) == len(set(ids1))
+
+
+def test_chunks_without_chunk_id_accepted():
+    """Chunks without chunk_id (pack/upload format) are accepted; no branching on origin."""
+    chunks = [
+        {
+            "text": "Reinforcement is defined as reward-based learning.",
+            "metadata": {
+                "book_id": "abc123",
+                "book": "MyUpload",
+                "chapter_number": "3",
+                "section_number": "3.1",
+                "chunk_index": 0,
+            },
+        }
+    ]
+    cards = generate_cards_from_chunks(chunks, max_cards=5, seed=42)
+    assert len(cards) >= 1
+    for c in cards:
+        assert len(c.citations) >= 1
+        assert c.citations[0].chunk_id  # synthesized from metadata
+        assert "abc123" in c.citations[0].chunk_id or "MyUpload" in c.citations[0].chunk_id
+
+
+def test_postprocess_cards_hook():
+    """postprocess_cards with mode=none returns cards unchanged."""
+    from study.models import Card, Citation
+    cards = [
+        Card(
+            card_id="abc",
+            book_name="B",
+            tags=[],
+            prompt="P",
+            answer="A",
+            card_type=CardType.SHORT_ANSWER.value,
+            citations=[Citation(chunk_id="c1", chapter="", section="", pages="")],
+        )
+    ]
+    result = postprocess_cards(cards, mode="none")
+    assert result == cards

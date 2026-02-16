@@ -1,0 +1,6 @@
+{
+  "path_id": "computer_science_core",
+  "title": "Computer Science",
+  "description": "Introduction to computer science",
+  "packs": ["cs-foundations", "cs-discrete-math"]
+}

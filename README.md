@@ -27,7 +27,9 @@ make setup
 make run
 ```
 
-Put PDFs in `./pdfs` and `make run` will auto-build the search index if it doesn't exist. Or run `make index` manually.
+**First run**: Put PDFs in `./pdfs`, then either:
+- `make run-bootstrap` — builds the index if missing, then starts the app
+- Or `make run` and click **Build Index** in the UI
 
 Then open:
 - **App**: http://localhost:3000
@@ -45,11 +47,12 @@ Then open:
 Atrium does **not** ship with textbook content. You provide your own.
 
 1. Place your PDFs in `pdfs/`
-2. Run `make run` — the index is built automatically from `pdfs/` if missing.
-3. Or run `make index` manually, then `make run`.
-4. For full pipeline (Q&A extraction, question banks), use `python run_pipeline.py` (see [docs/USAGE.md](docs/USAGE.md)).
+2. Run `make run-bootstrap` (builds index if missing, then starts app), or `make run` and click **Build Index** in the UI
+3. Or run `make index` manually, then `make run`
 
-**Content policy**: Use only content you have rights to (your notes, public domain, or licensed materials). No copyrighted textbooks are included.
+For full pipeline (Q&A extraction, question banks), use `python run_pipeline.py` (see [docs/USAGE.md](docs/USAGE.md)).
+
+**Content policy**: Use only content you have rights to — Creative Commons, public domain, or your own materials. No copyrighted textbooks are included.
 
 ## Project structure
 
@@ -60,6 +63,25 @@ Atrium does **not** ship with textbook content. You provide your own.
 | `docs/` | Architecture, usage, dev guides |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+
+## Hosting packs from your PC
+
+Atrium Packs are modular curriculum bundles (open-licensed only). To host packs locally:
+
+1. Run the packs CLI build:
+   ```bash
+   python scripts/packs_cli.py build
+   ```
+2. Serve the dist folder:
+   ```bash
+   cd atrium_packs/dist && python -m http.server 7777
+   ```
+3. Configure the frontend:
+   ```
+   NEXT_PUBLIC_PACKS_BASE=http://localhost:7777
+   ```
+
+See [docs/packs/SCHEMA.md](docs/packs/SCHEMA.md) for pack manifest format.
 
 ## Docs
 

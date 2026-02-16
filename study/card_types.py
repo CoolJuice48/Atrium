@@ -9,4 +9,6 @@ class CardType(str, Enum):
     CLOZE = "cloze"
     SHORT_ANSWER = "short_answer"
     COMPARE = "compare"
-    TRAP = "trap"
+    LIST = "list"
+    TRUE_FALSE = "true_false"
+    TRAP = "trap"  # Deprecated; map to TRUE_FALSE for new generation
