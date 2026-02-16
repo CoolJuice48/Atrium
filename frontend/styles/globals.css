@@ -106,6 +106,25 @@ body {
   border-radius: var(--radius);
 }
 
+.hero-panel {
+  padding: 28px;
+  background: linear-gradient(to bottom, #f8fafc, var(--surface));
+  border: 2px dashed var(--border);
+}
+
+.hero-panel .upload-dropzone {
+  border-width: 2px;
+  border-color: var(--border);
+}
+
+.upload-dropzone-hero {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
 .upload-hero-panel {
   border: 2px dashed var(--border);
 }
@@ -118,6 +137,56 @@ body {
   cursor: pointer;
   background: var(--surface);
   transition: background 0.15s, border-color 0.15s;
+}
+
+.section-muted {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.advanced-accordion {
+  margin-bottom: 16px;
+}
+
+.advanced-accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  border-radius: var(--radius);
+  transition: background 0.15s, color 0.15s;
+}
+
+.advanced-accordion-trigger:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.advanced-accordion-caret {
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+.advanced-accordion-content {
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+
+.advanced-accordion-content > * {
+  margin-bottom: 16px;
+}
+
+.advanced-accordion-content > *:last-child {
+  margin-bottom: 0;
 }
 
 .upload-dropzone:hover,

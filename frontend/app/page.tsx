@@ -51,12 +51,16 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const EXAMPLE_QUESTIONS = [
   "Give me a 10-bullet summary",
   "What are the key terms and definitions?",
-  "Make 10 practice questions with answers",
+  "Generate a 20-question practice exam",
 ];
+
+const ADVANCED_STORAGE_KEY = "atrium-advanced-open";
+const LAST_BOOK_STORAGE_KEY = "atrium-last-book-id";
 
 function HomeContent() {
   const [apiStatus, setApiStatus] = useState<"ok" | "err" | null>(null);
   const [status, setStatus] = useState<StatusResponse | null>(null);
+  const [books, setBooks] = useState<BookWithStudy[]>([]);
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
   const [packsCatalog, setPacksCatalog] = useState<PackCatalogEntry[]>([]);
   const [uploadInProgress, setUploadInProgress] = useState(false);
@@ -64,6 +68,15 @@ function HomeContent() {
     bookId: string;
     displayTitle: string;
   } | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(ADVANCED_STORAGE_KEY) === "true";
+  });
+  const [selectedBookId, setSelectedBookId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(LAST_BOOK_STORAGE_KEY) ?? "";
+  });
+  const [triggerExamForBookId, setTriggerExamForBookId] = useState<string | null>(null);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -76,6 +89,17 @@ function HomeContent() {
     }
   }, []);
 
+  const refreshBooks = useCallback(async () => {
+    try {
+      const res = await getBooks();
+      setBooks(res.books ?? []);
+      return res.books ?? [];
+    } catch {
+      setBooks([]);
+      return [];
+    }
+  }, []);
+
   const refreshCatalog = useCallback(async () => {
     try {
       const c = await getCatalog();
@@ -85,12 +109,22 @@ function HomeContent() {
     }
   }, []);
 
+  const refreshAll = useCallback(() => {
+    refreshStatus();
+    refreshBooks();
+    refreshCatalog();
+  }, [refreshStatus, refreshBooks, refreshCatalog]);
+
   useEffect(() => {
     getHealth()
       .then(() => setApiStatus("ok"))
       .catch(() => setApiStatus("err"));
     refreshStatus();
   }, [refreshStatus]);
+
+  useEffect(() => {
+    refreshBooks();
+  }, [refreshBooks]);
 
   useEffect(() => {
     getPacksCatalog().then(setPacksCatalog);
@@ -104,7 +138,39 @@ function HomeContent() {
     }
   }, [status?.index_ready, refreshCatalog]);
 
+  useEffect(() => {
+    if (advancedOpen !== undefined && typeof window !== "undefined") {
+      localStorage.setItem(ADVANCED_STORAGE_KEY, String(advancedOpen));
+    }
+  }, [advancedOpen]);
+
+  useEffect(() => {
+    if (selectedBookId && typeof window !== "undefined") {
+      localStorage.setItem(LAST_BOOK_STORAGE_KEY, selectedBookId);
+    }
+  }, [selectedBookId]);
+
+  const hasBooks = books.length > 0;
+  const hasReadyBooks = books.some((b) => b.chunk_count > 0);
+  const isIndexMissing = !status?.index_exists || !status?.index_ready;
+
+  useEffect(() => {
+    if (hasBooks && selectedBookId && !books.some((b) => b.book_id === selectedBookId)) {
+      setSelectedBookId(books[0].book_id);
+    } else if (hasBooks && !selectedBookId) {
+      setSelectedBookId(books[0].book_id);
+    }
+  }, [hasBooks, books, selectedBookId]);
+
   const { user, logout } = useAuth();
+
+  const statusChipLabel = !hasBooks
+    ? "No documents yet"
+    : hasBooks && !hasReadyBooks
+      ? "Indexing…"
+      : "Ready";
+
+  const statusChipClass = !hasBooks ? "warn" : hasReadyBooks ? "ok" : "warn";
 
   return (
     <div className="app">
@@ -128,74 +194,98 @@ function HomeContent() {
             {apiStatus === "ok" ? "API connected" : "API offline"}
           </span>
         )}
-        {status && (
-          <span className={`status-chip ${status.index_ready ? "ok" : "warn"}`}>
-            Index: {status.index_ready ? "Ready" : "Missing"}
+        {(hasBooks || status) && (
+          <span className={`status-chip ${statusChipClass}`}>
+            {statusChipLabel}
           </span>
         )}
       </header>
 
       <main>
         <UploadHeroPanel
+          isHero={!hasBooks}
           onUploadStart={() => setUploadInProgress(true)}
           onUploadComplete={(bookId, displayTitle) => {
             setUploadInProgress(false);
             setUploadJustCompleted({ bookId, displayTitle });
-            refreshStatus();
-            refreshCatalog();
+            setSelectedBookId(bookId);
+            refreshAll();
           }}
           onUploadFail={() => setUploadInProgress(false)}
           onUploadCancel={() => setUploadInProgress(false)}
         />
-        {status && !status.index_ready && (
-          <BuildIndexPanel
-            defaultPdfDir={status.pdf_dir}
-            defaultIndexRoot={status.index_root}
-            onBuilt={() => {
-              refreshStatus();
-              refreshCatalog();
-            }}
-          />
+
+        {!hasBooks && (
+          <div className="section-muted mb" style={{ padding: "16px 20px", marginBottom: 24 }}>
+            <h3 style={{ fontSize: "0.9rem", marginBottom: 12 }}>What happens next</h3>
+            <ol style={{ margin: 0, paddingLeft: 20, fontSize: "0.9rem", lineHeight: 1.8 }}>
+              <li>We index your PDF</li>
+              <li>You ask questions</li>
+              <li>We generate practice exams &amp; flashcards</li>
+            </ol>
+          </div>
         )}
-        {status?.index_exists && (
-          <RepairPanel
-            indexRoot={status.index_root}
-            consistencyOk={status.consistency?.ok ?? true}
-            onRepaired={() => {
-              refreshStatus();
-              refreshCatalog();
-            }}
-          />
-        )}
-        <AskPanel
-          catalog={catalog}
-          indexReady={status?.index_ready}
-          uploadInProgress={uploadInProgress}
-          uploadJustCompleted={uploadJustCompleted}
-          onClearUploadCompleted={() => setUploadJustCompleted(null)}
+
+        <AdvancedAccordion
+          open={advancedOpen}
+          onToggle={() => setAdvancedOpen((o) => !o)}
+          children={
+            <>
+              {packsCatalog.length > 0 && (
+                <PacksCatalogPanel
+                  packs={packsCatalog}
+                  onInstalled={refreshAll}
+                />
+              )}
+              <SyllabusUploadPanel />
+              {status && !status.index_ready && (
+                <BuildIndexPanel
+                  defaultPdfDir={status.pdf_dir}
+                  defaultIndexRoot={status.index_root}
+                  onBuilt={refreshAll}
+                />
+              )}
+              {status?.index_exists && (
+                <RepairPanel
+                  indexRoot={status.index_root}
+                  consistencyOk={status.consistency?.ok ?? true}
+                  onRepaired={refreshAll}
+                />
+              )}
+            </>
+          }
         />
-        <SyllabusUploadPanel />
-        {packsCatalog.length > 0 && (
-          <PacksCatalogPanel
-            packs={packsCatalog}
-            onInstalled={() => {
-              refreshStatus();
-              refreshCatalog();
-            }}
-          />
+
+        {hasBooks && (
+          <>
+            <AskPanel
+              catalog={catalog}
+              books={books}
+              indexReady={status?.index_ready}
+              uploadInProgress={uploadInProgress}
+              uploadJustCompleted={uploadJustCompleted}
+              selectedBookId={selectedBookId}
+              onSelectBook={setSelectedBookId}
+              onClearUploadCompleted={() => setUploadJustCompleted(null)}
+              onQuickExamRequest={() => selectedBookId && setTriggerExamForBookId(selectedBookId)}
+            />
+            <ExamPanel
+              selectedBookId={selectedBookId}
+              onSelectBook={setSelectedBookId}
+              books={books}
+              triggerGenerate={triggerExamForBookId}
+              onTriggerConsumed={() => setTriggerExamForBookId(null)}
+            />
+            <StudyArtifactsPanel
+              selectedBookId={selectedBookId}
+              onSelectBook={setSelectedBookId}
+              books={books}
+              onUpdated={refreshAll}
+            />
+            <StudyPanel catalog={catalog} />
+            <ProgressPanel />
+          </>
         )}
-        {status?.index_ready && (
-          <StudyArtifactsPanel
-            onUpdated={() => {
-              refreshCatalog();
-            }}
-          />
-        )}
-        {status?.index_ready && (
-          <ExamPanel />
-        )}
-        <StudyPanel catalog={catalog} />
-        <ProgressPanel />
       </main>
     </div>
   );
@@ -209,12 +299,41 @@ export default function Home() {
   );
 }
 
+function AdvancedAccordion({
+  open,
+  onToggle,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="advanced-accordion panel">
+      <button
+        type="button"
+        className="advanced-accordion-trigger"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span>Advanced</span>
+        <span className="advanced-accordion-caret" aria-hidden>
+          {open ? "▾" : "▸"}
+        </span>
+      </button>
+      {open && <div className="advanced-accordion-content">{children}</div>}
+    </div>
+  );
+}
+
 function UploadHeroPanel({
+  isHero = true,
   onUploadStart,
   onUploadComplete,
   onUploadFail,
   onUploadCancel,
 }: {
+  isHero?: boolean;
   onUploadStart: () => void;
   onUploadComplete: (bookId: string, displayTitle: string) => void;
   onUploadFail: () => void;
@@ -284,13 +403,20 @@ function UploadHeroPanel({
   };
 
   return (
-    <section className="panel upload-hero-panel">
+    <section className={`panel upload-hero-panel ${isHero ? "hero-panel" : ""}`}>
       <h2>Upload & Study</h2>
       <p className="mb" style={{ fontSize: "0.9rem" }}>
-        Upload a PDF to index it and start asking questions.
+        {isHero
+          ? "Upload a lecture PDF, study guide, or textbook chapter."
+          : "Upload another PDF to add to your library."}
       </p>
+      {isHero && (
+        <p className="section-muted mb" style={{ fontSize: "0.85rem" }}>
+          Text-based PDFs work best. Scans may not extract text yet.
+        </p>
+      )}
       <div
-        className={`upload-dropzone ${dragOver ? "drag-over" : ""}`}
+        className={`upload-dropzone ${dragOver ? "drag-over" : ""} ${isHero ? "upload-dropzone-hero" : ""}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => {
@@ -814,16 +940,24 @@ function RepairResultsPanel({ report }: { report: RepairReport }) {
 
 function AskPanel({
   catalog,
+  books,
   indexReady,
   uploadInProgress,
   uploadJustCompleted,
+  selectedBookId,
+  onSelectBook,
   onClearUploadCompleted,
+  onQuickExamRequest,
 }: {
   catalog: CatalogResponse | null;
+  books: BookWithStudy[];
   indexReady?: boolean;
   uploadInProgress?: boolean;
   uploadJustCompleted?: { bookId: string; displayTitle: string } | null;
+  selectedBookId: string;
+  onSelectBook: (id: string) => void;
   onClearUploadCompleted?: () => void;
+  onQuickExamRequest?: () => void;
 }) {
   const [question, setQuestion] = useState("");
   const [book, setBook] = useState("");
@@ -834,14 +968,27 @@ function AskPanel({
   const askInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (uploadJustCompleted && catalog?.books) {
-      const match = catalog.books.find(
-        (b) => b.name === uploadJustCompleted.displayTitle || b.name.replace(/\.pdf$/i, "") === uploadJustCompleted.displayTitle
+    if (uploadJustCompleted) {
+      onSelectBook(uploadJustCompleted.bookId);
+      const match = catalog?.books?.find(
+        (b) => b.name === uploadJustCompleted!.displayTitle || b.name.replace(/\.pdf$/i, "") === uploadJustCompleted!.displayTitle
       );
       if (match) setBook(match.name);
+      else if (books.find((b) => b.book_id === uploadJustCompleted!.bookId)) {
+        setBook(books.find((b) => b.book_id === uploadJustCompleted!.bookId)!.title);
+      }
       askInputRef.current?.focus();
     }
-  }, [uploadJustCompleted, catalog?.books]);
+  }, [uploadJustCompleted, catalog?.books, books, onSelectBook]);
+
+  useEffect(() => {
+    if (selectedBookId && !uploadJustCompleted) {
+      const b = books.find((x) => x.book_id === selectedBookId);
+      const match = catalog?.books?.find((c) => c.name === b?.title || c.name.replace(/\.pdf$/i, "") === b?.title?.replace(/\.pdf$/i, ""));
+      if (match) setBook(match.name);
+      else if (b) setBook(b.title);
+    }
+  }, [selectedBookId, books, catalog?.books]);
 
   const handleQuery = async () => {
     if (!question.trim()) return;
@@ -877,31 +1024,13 @@ function AskPanel({
   };
 
   const hasBooks = catalog?.books && catalog.books.length > 0;
-  const isEmpty = indexReady && !hasBooks;
-
-  if (indexReady === false) {
-    return (
-      <section className="panel">
-        <h2>Ask</h2>
-        <p className="loading">No index yet. Build it to ask questions.</p>
-      </section>
-    );
-  }
+  const showExampleQuestions = uploadJustCompleted || selectedBookId;
 
   if (uploadInProgress) {
     return (
       <section className="panel">
         <h2>Ask</h2>
         <p className="loading">Indexing… Your document will be ready in a moment.</p>
-      </section>
-    );
-  }
-
-  if (isEmpty) {
-    return (
-      <section className="panel">
-        <h2>Ask</h2>
-        <p className="loading">Upload a PDF to start.</p>
       </section>
     );
   }
@@ -919,15 +1048,18 @@ function AskPanel({
           )}
         </p>
       )}
-      {uploadJustCompleted && (
+      {showExampleQuestions && (
         <div className="example-questions mb">
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 4 }}>Example questions:</p>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 4 }}>Try example questions:</p>
           {EXAMPLE_QUESTIONS.map((q, i) => (
             <button
               key={i}
               className="secondary"
               style={{ display: "block", marginBottom: 4, textAlign: "left", width: "100%" }}
-              onClick={() => setQuestion(q)}
+              onClick={() => {
+                if (i === 2 && onQuickExamRequest) onQuickExamRequest();
+                else setQuestion(q);
+              }}
             >
               {q}
             </button>
@@ -947,16 +1079,29 @@ function AskPanel({
       <div className="row mb">
         <select
           value={book}
-          onChange={(e) => setBook(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            setBook(v);
+            const b = books.find((x) => x.title === v || x.title.replace(/\.pdf$/i, "") === v);
+            if (b) onSelectBook(b.book_id);
+            else if (catalog?.books?.find((x) => x.name === v)) {
+              const cb = catalog.books.find((x) => x.name === v);
+              const mb = books.find((x) => x.title === cb?.name || x.title.replace(/\.pdf$/i, "") === cb?.name?.replace(/\.pdf$/i, ""));
+              if (mb) onSelectBook(mb.book_id);
+            }
+          }}
           disabled={loading}
           style={{ maxWidth: 200 }}
         >
           <option value="">All books</option>
-          {catalog?.books.map((b) => (
-            <option key={b.name} value={b.name}>
-              {b.name}
-            </option>
-          ))}
+          {(catalog?.books?.length ? catalog.books : books).map((b) => {
+            const name = "name" in b ? (b as { name: string }).name : (b as BookWithStudy).title;
+            return (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            );
+          })}
         </select>
         <button
           className="primary"
@@ -1009,10 +1154,21 @@ function AskPanel({
   );
 }
 
-function StudyArtifactsPanel({ onUpdated }: { onUpdated: () => void }) {
-  const [books, setBooks] = useState<BookWithStudy[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState("");
+function StudyArtifactsPanel({
+  selectedBookId,
+  onSelectBook,
+  books: booksProp,
+  onUpdated,
+}: {
+  selectedBookId: string;
+  onSelectBook: (id: string) => void;
+  books: BookWithStudy[];
+  onUpdated: () => void;
+}) {
   const [loadingBooks, setLoadingBooks] = useState(false);
+  const books = booksProp.length > 0 ? booksProp : [] as BookWithStudy[];
+  const [localBooks, setLocalBooks] = useState<BookWithStudy[]>([]);
+  const booksToUse = books.length > 0 ? books : localBooks;
   const [generating, setGenerating] = useState(false);
   const [dueCards, setDueCards] = useState<StudyDueCard[]>([]);
   const [loadingDue, setLoadingDue] = useState(false);
@@ -1025,18 +1181,18 @@ function StudyArtifactsPanel({ onUpdated }: { onUpdated: () => void }) {
     setError(null);
     try {
       const res = await getBooks();
-      setBooks(res.books);
-      setSelectedBookId((prev) => (prev || res.books[0]?.book_id || ""));
+      setLocalBooks(res.books ?? []);
+      if (!selectedBookId && res.books?.[0]) onSelectBook(res.books[0].book_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load books");
     } finally {
       setLoadingBooks(false);
     }
-  }, []);
+  }, [onSelectBook, selectedBookId]);
 
   useEffect(() => {
-    loadBooks();
-  }, [loadBooks]);
+    if (booksProp.length === 0) loadBooks();
+  }, [booksProp.length, loadBooks]);
 
   useEffect(() => {
     if (selectedBookId) {
@@ -1056,12 +1212,11 @@ function StudyArtifactsPanel({ onUpdated }: { onUpdated: () => void }) {
     setError(null);
     try {
       await generateStudyCards(selectedBookId, { max_cards: 20 });
-      loadBooks();
+      onUpdated();
       if (selectedBookId) {
         const res = await getStudyDue(selectedBookId, 20);
         setDueCards(res.cards);
       }
-      onUpdated();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Generate failed");
     } finally {
@@ -1078,13 +1233,13 @@ function StudyArtifactsPanel({ onUpdated }: { onUpdated: () => void }) {
       setShowAnswer(false);
       const res = await getStudyDue(selectedBookId, 20);
       setDueCards(res.cards);
-      loadBooks();
+      onUpdated();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Review failed");
     }
   };
 
-  const selectedBook = books.find((b) => b.book_id === selectedBookId);
+  const selectedBook = booksToUse.find((b) => b.book_id === selectedBookId);
 
   return (
     <section className="panel">
@@ -1096,12 +1251,12 @@ function StudyArtifactsPanel({ onUpdated }: { onUpdated: () => void }) {
       <div className="row mb">
         <select
           value={selectedBookId}
-          onChange={(e) => setSelectedBookId(e.target.value)}
+          onChange={(e) => onSelectBook(e.target.value)}
           disabled={loadingBooks}
           style={{ maxWidth: 220 }}
         >
           <option value="">Select book</option>
-          {books.map((b) => (
+          {booksToUse.map((b) => (
             <option key={b.book_id} value={b.book_id}>
               {b.title} ({b.study.card_count} cards, {b.study.due_count} due)
             </option>
@@ -1192,9 +1347,21 @@ const CARD_TYPE_LABELS: Record<string, string> = {
   compare: "Compare",
 };
 
-function ExamPanel() {
-  const [books, setBooks] = useState<BookWithStudy[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState("");
+function ExamPanel({
+  selectedBookId,
+  onSelectBook,
+  books: booksProp,
+  triggerGenerate,
+  onTriggerConsumed,
+}: {
+  selectedBookId: string;
+  onSelectBook: (id: string) => void;
+  books: BookWithStudy[];
+  triggerGenerate: string | null;
+  onTriggerConsumed: () => void;
+}) {
+  const [localBooks, setLocalBooks] = useState<BookWithStudy[]>([]);
+  const books = booksProp.length > 0 ? booksProp : localBooks;
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [exam, setExam] = useState<ExamGenerateResponse | null>(null);
@@ -1207,18 +1374,33 @@ function ExamPanel() {
     setError(null);
     try {
       const res = await getBooks();
-      setBooks(res.books);
-      setSelectedBookId((prev) => (prev || res.books[0]?.book_id || ""));
+      setLocalBooks(res.books ?? []);
+      if (!selectedBookId && res.books?.[0]) onSelectBook(res.books[0].book_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load books");
     } finally {
       setLoadingBooks(false);
     }
-  }, []);
+  }, [onSelectBook, selectedBookId]);
 
   useEffect(() => {
-    loadBooks();
-  }, [loadBooks]);
+    if (booksProp.length === 0) loadBooks();
+  }, [booksProp.length, loadBooks]);
+
+  useEffect(() => {
+    if (!triggerGenerate) return;
+    onSelectBook(triggerGenerate);
+    onTriggerConsumed();
+    setGenerating(true);
+    setError(null);
+    setExam(null);
+    setRevealed(new Set());
+    setGrades({});
+    postExamGenerate(triggerGenerate, { exam_size: 20 })
+      .then(setExam)
+      .catch((e) => setError(e instanceof Error ? e.message : "Generate failed"))
+      .finally(() => setGenerating(false));
+  }, [triggerGenerate, onSelectBook, onTriggerConsumed]);
 
   const handleGenerate = async () => {
     if (!selectedBookId) return;
@@ -1262,7 +1444,7 @@ function ExamPanel() {
       <div className="row mb">
         <select
           value={selectedBookId}
-          onChange={(e) => setSelectedBookId(e.target.value)}
+          onChange={(e) => onSelectBook(e.target.value)}
           disabled={loadingBooks}
           style={{ maxWidth: 220 }}
         >
