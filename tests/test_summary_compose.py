@@ -173,6 +173,77 @@ def test_clean_text_normalizes():
     assert "wordword" in out or "word word" in out
 
 
+def test_summary_filters_exercise_questions_and_headings():
+    """Exercise prompts, Chapter/Section/Example headings do not appear in bullets."""
+    sentences = [
+        "What would the sequence of states be if we started from state A?",
+        "Exercise 10: Prove that the policy converges.",
+        "Chapter 10: Reinforcement Learning introduces the key concepts.",
+        "Section 3.2.1 covers the implementation details.",
+        "Example 5: Consider the following Markov chain.",
+        "Reinforcement learning is a type of machine learning where an agent learns by interacting with an environment.",
+        "The policy gradient method updates parameters in the direction of higher expected reward.",
+    ]
+    output = compose_bulleted_summary(sentences, "summary of reinforcement learning", max_bullets=10)
+    bullets = [l.strip()[2:] for l in output.split("\n") if l.strip().startswith("- ")]
+
+    for bad in [
+        "What would the sequence",
+        "Exercise 10",
+        "Chapter 10",
+        "Section 3.2",
+        "Example 5",
+    ]:
+        for b in bullets:
+            assert bad not in b, f"Should not contain '{bad}'"
+
+    assert any("reinforcement" in b.lower() or "policy" in b.lower() for b in bullets)
+
+
+def test_split_sentences_breaks_on_dashes_and_caps_length():
+    """Long dash-separated string produces multiple sentences, none exceed 240 chars."""
+    # 400+ chars with em/en dashes as separators; split should produce multiple segments
+    long_text = (
+        "Machine learning is a subset of artificial intelligence that enables systems to learn. "
+        "Supervised learning — uses labeled data to train models for classification and regression tasks — "
+        "is the most common approach. Unsupervised learning – discovers patterns in unlabeled data – "
+        "includes clustering and dimensionality reduction. Reinforcement learning learns through trial and error."
+    )
+    out = split_sentences(long_text)
+    assert len(out) >= 2, "Dashes should create split points"
+    assert not any(len(s) > 240 for s in out), "No sentence should exceed 240 chars"
+
+
+def test_header_is_clean():
+    """Output starts with exactly '### Summary' and no sentence appended to header."""
+    sentences = [
+        "Machine learning enables computers to learn from data without explicit programming.",
+        "Supervised learning uses labeled data to train models for prediction tasks.",
+    ]
+    output = compose_bulleted_summary(sentences, "summary", max_bullets=5)
+    lines = output.split("\n")
+    assert lines[0] == "### Summary"
+    assert not lines[0].startswith("### Summary -")
+    assert "### Summary -" not in output
+
+
+def test_key_terms_excludes_stopwords_and_short_tokens():
+    """Key terms exclude 'this', 'using' and require terms >= 4 chars."""
+    from server.services.summary_compose import _extract_key_terms
+
+    sentences = [
+        "This document explains machine learning using gradient descent.",
+        "Reinforcement learning considers states and rewards in the environment.",
+        "The algorithm uses backpropagation for training neural networks.",
+    ]
+    terms = _extract_key_terms(sentences, max_terms=10)
+    assert "this" not in terms
+    assert "using" not in terms
+    assert "that" not in terms
+    assert not any(len(t) < 4 for t in terms)
+    assert any(t in terms for t in ["machine", "learning", "gradient", "reinforcement"])
+
+
 def test_split_sentences_filters_short_and_long():
     """split_sentences keeps 30-240 chars, min 6 words."""
     short = "Too short."

@@ -85,6 +85,8 @@ def is_summary_type_question(question: str) -> bool:
         "chapter summary",
         "brief summary",
         "give me a summary",
+        "10-bullet",
+        "bullet summary",
     ]
     return any(kw in q for kw in keywords)
 

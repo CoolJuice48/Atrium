@@ -9,7 +9,12 @@ from typing import List, Tuple
 
 # Simple stopwords for keyword extraction and clustering
 _STOPWORDS = frozenset(
-    "a an the and or but in on at to for of with by from as is was are were been be have has had do does did will would could should may might must can shall".split()
+    "a an the and or but in on at to for of with by from as is was are were been be have has had do does did will would could should may might must can shall this that these those it its using consider given".split()
+)
+
+# Extended stopwords for key terms (exclude garbage)
+_KEYTERM_STOPWORDS = _STOPWORDS | frozenset(
+    "reward states erential reward using consider given thus hence therefore however".split()
 )
 
 # LaTeX/math noise patterns (escape [ in char classes)
@@ -39,33 +44,120 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
+def _pre_normalize_for_split(text: str) -> str:
+    """Pre-normalize separators before sentence splitting."""
+    # Em/en dashes -> newline
+    text = re.sub(r"[—–]", "\n", text)
+    # Bullet " • " -> newline
+    text = re.sub(r"\s+•\s+", "\n", text)
+    # "Example 10: " or "Chapter 5: " style heading labels -> newline (split point)
+    text = re.sub(
+        r"(?:example|chapter|section|figure|table)\s+\d+(?:\.\d+)*[.:]\s*",
+        "\n",
+        text,
+        flags=re.I,
+    )
+    # ": " before capital (heading-like) -> .\n
+    text = re.sub(r":\s+(?=[A-Z])", ".\n", text)
+    # Multiple dot-leaders -> newline
+    text = re.sub(r"\.{3,}\s*", "\n", text)
+    return text
+
+
+def _hard_split_long(seg: str, max_len: int = 240, min_len: int = 30) -> List[str]:
+    """Split segment > max_len on ; , : into clauses in valid range."""
+    if len(seg) <= max_len:
+        return [seg] if min_len <= len(seg) else []
+    out = []
+    for part in re.split(r"[;,:]\s+", seg):
+        part = part.strip()
+        if not part:
+            continue
+        if len(part) > max_len:
+            # Recursively split on spaces (greedy)
+            words = part.split()
+            current = []
+            cur_len = 0
+            for w in words:
+                if cur_len + len(w) + 1 > max_len and current:
+                    clause = " ".join(current)
+                    if min_len <= len(clause) <= max_len:
+                        out.append(clause)
+                    current = []
+                    cur_len = 0
+                current.append(w)
+                cur_len += len(w) + (1 if current else 0)
+            if current:
+                clause = " ".join(current)
+                if min_len <= len(clause) <= max_len:
+                    out.append(clause)
+        elif min_len <= len(part) <= max_len:
+            out.append(part)
+    return out
+
+
 def split_sentences(text: str) -> List[str]:
-    """Simple sentence splitter. Returns sentences 30-240 chars, min 6 words."""
+    """
+    Sentence splitter. Returns sentences 30-240 chars, min 6 words.
+    Pre-normalizes dashes, bullets, dot-leaders. Hard-splits mega-sentences.
+    """
     if not text or not text.strip():
         return []
     text = clean_text(text)
-    # Split on sentence boundaries and line breaks
+    text = _pre_normalize_for_split(text)
+
+    # Primary split: . ! ? newlines
     raw = re.split(r"[.!?]+\s*|\n+", text)
-    out = []
+    candidates = []
     for s in raw:
         s = s.strip()
         if not s:
             continue
-        if 30 <= len(s) <= 240 and len(s.split()) >= 6:
+        # Secondary split: ; and : when segment > 220 chars
+        if len(s) > 220:
+            for sub in re.split(r"[;:]\s+", s):
+                sub = sub.strip()
+                if sub:
+                    candidates.append(sub)
+        else:
+            candidates.append(s)
+
+    out = []
+    for s in candidates:
+        s = s.strip()
+        if not s:
+            continue
+        if len(s) > 240:
+            clauses = _hard_split_long(s, max_len=240, min_len=30)
+            for c in clauses:
+                if 30 <= len(c) <= 240 and len(c.split()) >= 6:
+                    out.append(c)
+        elif 30 <= len(s) <= 240 and len(s.split()) >= 6:
             out.append(s)
     return out
 
 
-def is_noisy_sentence(s: str) -> bool:
-    """Return True if sentence is LaTeX/math noise, figure ref, or digit-heavy."""
+def is_noisy_sentence(s: str, *, for_summary: bool = False) -> bool:
+    """
+    Return True if sentence is LaTeX/math noise, figure ref, heading, exercise, or digit-heavy.
+    When for_summary=True, applies stricter rules for summary bullets.
+    """
     if not s or len(s) < 10:
         return True
     s_clean = s.strip()
+    lower = s_clean.lower()
+    tokens = s_clean.split()
 
-    # Too many digits
+    # Digit ratio (stricter for summary: 0.12 vs 0.18)
     chars = len(s_clean.replace(" ", "")) or 1
     digit_count = sum(1 for c in s_clean if c.isdigit())
-    if digit_count / chars > 0.18:
+    digit_ratio = digit_count / chars
+    if digit_ratio > (0.12 if for_summary else 0.18):
+        return True
+
+    # Numeric token count (for summary: >= 3 numeric tokens -> noisy)
+    numeric_tokens = sum(1 for t in tokens if t.isdigit())
+    if for_summary and numeric_tokens >= 3:
         return True
 
     # LaTeX / math noise
@@ -76,10 +168,46 @@ def is_noisy_sentence(s: str) -> bool:
         return True
 
     # Figure/table reference
-    lower = s_clean.lower()
     if lower.startswith(("figure ", "table ", "eq.", "equation ")):
         return True
-    if "fig." in lower and len(s_clean.split()) < 15:
+    if "fig." in lower and len(tokens) < 15:
+        return True
+
+    # Exercise/question prompt detection (for_summary)
+    if for_summary:
+        if s_clean.rstrip().endswith("?"):
+            return True
+        start_words = (
+            "what", "why", "how", "prove", "derive", "compute",
+            "calculate", "exercise", "problem", "question",
+        )
+        first_word = tokens[0].lower() if tokens else ""
+        if first_word in start_words:
+            return True
+        if lower.startswith("show that"):
+            return True
+        if re.search(r"exercise\s+\d+|problem\s+\d+|q\d+", lower):
+            return True
+
+    # Heading/reference detection
+    if re.search(r"\bchapter\s+\d+", lower):
+        return True
+    if re.search(r"\bsection\s+\d+(?:\.\d+)*", lower):
+        return True
+    if re.search(r"\bexample\s+\d+", lower):
+        return True
+    if re.search(r"\bfigure\s+\d+", lower):
+        return True
+    if re.search(r"\btable\s+\d+", lower):
+        return True
+    if re.search(r"\bp\.\s*\d+|\bpp\.\s*\d+", lower):
+        return True
+    if re.search(r"\bcontents\b", lower):
+        return True
+    if re.search(r"§\s*\d+(?:\.\d+)*", s_clean):
+        return True
+    # "Kernel-based ... 232" type: ends with number, many dots or spaced numbers
+    if re.search(r"\d+\s*$", s_clean) and (s_clean.count(".") >= 3 or numeric_tokens >= 2):
         return True
 
     # Too many non-letters
@@ -88,7 +216,6 @@ def is_noisy_sentence(s: str) -> bool:
         return True
 
     # Long token sequences like "1 2 3 4 5" or many commas with short tokens
-    tokens = s_clean.split()
     if len(tokens) >= 5:
         numeric_run = 0
         for t in tokens:
@@ -191,15 +318,63 @@ def _trim_bullet(s: str, max_len: int = 180) -> str:
 
 
 def _extract_key_terms(sentences: List[str], max_terms: int = 8) -> List[str]:
-    """Extract frequent non-stopword terms from sentences."""
+    """
+    Extract frequent terms for key terms section.
+    Excludes stopwords, tokens < 4 chars, hyphenation remnants.
+    """
     from collections import Counter
 
     counts: Counter = Counter()
     for sent in sentences:
         for t in _tokenize(sent):
-            if t not in _STOPWORDS and len(t) > 2:
-                counts[t] += 1
+            if t in _KEYTERM_STOPWORDS:
+                continue
+            if len(t) < 4:
+                continue
+            if "-" in t or t.endswith("'s") or re.search(r"\d", t):
+                continue
+            counts[t] += 1
     return [t for t, _ in counts.most_common(max_terms)]
+
+
+def _is_bullet_eligible(
+    s: str,
+    *,
+    min_words: int = 10,
+    max_words: int = 28,
+    max_words_relaxed: int = 34,
+    max_numeric_tokens: int = 2,
+) -> bool:
+    """
+    Hard eligibility for summary bullets.
+    Returns True only if sentence passes word count, numeric limit, and heading/exercise filters.
+    """
+    s = s.strip()
+    if s.endswith("?"):
+        return False
+    tokens = s.split()
+    word_count = len(tokens)
+    numeric_count = sum(1 for t in tokens if t.isdigit())
+
+    if numeric_count > max_numeric_tokens:
+        return False
+
+    heading_keywords = (
+        "chapter", "section", "example", "exercise", "problem",
+        "figure", "table", "contents",
+    )
+    lower = s.lower()
+    for kw in heading_keywords:
+        if kw in lower:
+            return False
+    if re.search(r"\bp\.\s*\d|\bpp\.\s*\d", lower):
+        return False
+
+    if min_words <= word_count <= max_words:
+        return True
+    if word_count <= max_words_relaxed and word_count >= min_words:
+        return True
+    return False
 
 
 def compose_bulleted_summary(
@@ -212,15 +387,22 @@ def compose_bulleted_summary(
     """
     Produce a study-guide style bullet summary from candidate sentences.
 
-    Returns markdown-style string with ### Summary and optional ### Key terms.
+    Returns markdown-style string with ### Summary (header only, no sentence appended)
+    and optional ### Key terms.
     """
-    # Filter noise
-    clean = [s for s in sentences if not is_noisy_sentence(s)]
+    # Filter noise (for_summary=True for stricter heading/exercise filters)
+    clean = [s for s in sentences if not is_noisy_sentence(s, for_summary=True)]
     if not clean:
         return "### Summary\n\nNo clear summary could be extracted from the retrieved content."
 
-    # Score and rank (use chunk_idx=0 for all when no position info)
-    scored = [(score_sentence(s, query, chunk_idx=0), s) for s in clean]
+    # Hard bullet eligibility: word count 10-28, numeric <= 2, no heading/exercise
+    eligible = [s for s in clean if _is_bullet_eligible(s, max_words=28)]
+    if len(eligible) < 3:
+        eligible = [s for s in clean if _is_bullet_eligible(s, max_words=34)]
+    candidates = eligible if eligible else clean
+
+    # Score and rank
+    scored = [(score_sentence(s, query, chunk_idx=0), s) for s in candidates]
     scored.sort(key=lambda x: x[0], reverse=True)
     candidates = [s for _, s in scored[:max_candidates]]
 
@@ -230,7 +412,6 @@ def compose_bulleted_summary(
     # Select 1-2 best per cluster, trim
     bullets = []
     for cluster in clusters:
-        # Re-score within cluster
         cluster_scored = [(score_sentence(s, query, chunk_idx=0), s) for s in cluster]
         cluster_scored.sort(key=lambda x: x[0], reverse=True)
         for _, s in cluster_scored[:2]:
@@ -244,12 +425,13 @@ def compose_bulleted_summary(
 
     bullets = bullets[:max_bullets]
 
+    # Header exactly "### Summary" with no sentence appended
     out = ["### Summary", ""]
     for b in bullets:
         out.append(f"- {b}")
     out.append("")
 
-    # Optional key terms
+    # Key terms (improved quality)
     terms = _extract_key_terms(candidates, max_terms=8)
     if terms:
         out.append("### Key terms (from text)")
