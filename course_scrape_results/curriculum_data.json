@@ -1,0 +1,257 @@
+{
+  "curriculum_name": "Data Structures and Algorithms",
+  "universities": {
+    "michigan": {
+      "institution": "University of Michigan",
+      "department": "EECS",
+      "courses": [
+        {
+          "number": "EECS 203",
+          "name": "Discrete Mathematics",
+          "credits": 4,
+          "prerequisites": ["MATH 115 or equivalent (Calculus I)"],
+          "type": "foundation",
+          "topics": [
+            "Propositional and predicate logic",
+            "Set theory",
+            "Functions and relations",
+            "Growth of functions and asymptotic notation",
+            "Introduction to algorithms",
+            "Elementary combinatorics",
+            "Graph theory",
+            "Discrete probability"
+          ]
+        },
+        {
+          "number": "EECS 280",
+          "name": "Programming and Introductory Data Structures",
+          "credits": 4,
+          "prerequisites": ["EECS 183 or ENGR 101"],
+          "type": "foundation",
+          "topics": [
+            "Algorithm development",
+            "Structured programming",
+            "Testing and correctness",
+            "Recursion",
+            "Abstract data types",
+            "Pointers and linked structures",
+            "Stacks, queues, arrays",
+            "Trees"
+          ]
+        },
+        {
+          "number": "EECS 281",
+          "name": "Data Structures and Algorithms",
+          "credits": 4,
+          "prerequisites": ["EECS 203", "EECS 280"],
+          "type": "core",
+          "primary": true,
+          "topics": [
+            "Algorithm analysis and O-notation",
+            "Lists, stacks, queues, priority queues",
+            "Hash tables",
+            "Binary trees, search trees, balanced trees",
+            "Graphs",
+            "Searching and sorting algorithms",
+            "Recursive algorithms",
+            "Greedy algorithms",
+            "Divide and conquer"
+          ]
+        },
+        {
+          "number": "EECS 376",
+          "name": "Foundations of Computer Science",
+          "credits": 4,
+          "prerequisites": ["EECS 203", "EECS 280"],
+          "type": "theory",
+          "topics": [
+            "Models of computation",
+            "Finite automata",
+            "Pushdown automata",
+            "Turing machines",
+            "Computability",
+            "Complexity theory"
+          ]
+        },
+        {
+          "number": "EECS 477",
+          "name": "Introduction to Algorithms",
+          "credits": 4,
+          "prerequisites": ["EECS 281"],
+          "type": "advanced",
+          "topics": [
+            "Advanced algorithm design techniques",
+            "Mathematical analysis",
+            "Greedy algorithms",
+            "Divide and conquer",
+            "Dynamic programming",
+            "Graph algorithms",
+            "NP-completeness"
+          ]
+        }
+      ]
+    },
+    "mit": {
+      "institution": "Massachusetts Institute of Technology",
+      "department": "Course 6 (EECS)",
+      "courses": [
+        {
+          "number": "6.1200",
+          "name": "Mathematics for Computer Science",
+          "credits": 12,
+          "prerequisites": ["Calculus I"],
+          "type": "foundation",
+          "topics": [
+            "Elementary discrete mathematics",
+            "Proofs and induction",
+            "Logic",
+            "Sets, relations, functions",
+            "Discrete probability",
+            "Graph theory fundamentals"
+          ]
+        },
+        {
+          "number": "6.1210",
+          "name": "Introduction to Algorithms",
+          "credits": 12,
+          "prerequisites": ["Programming proficiency", "6.1200"],
+          "type": "core",
+          "primary": true,
+          "topics": [
+            "Theory and practice of algorithms",
+            "Data structures",
+            "Algorithm design and analysis",
+            "Performance engineering",
+            "Sequential and parallel algorithms",
+            "Cache-efficient algorithms",
+            "Graph algorithms"
+          ]
+        },
+        {
+          "number": "6.1220",
+          "name": "Design and Analysis of Algorithms",
+          "credits": 12,
+          "prerequisites": ["6.1210"],
+          "type": "advanced",
+          "topics": [
+            "Sorting, searching, selection",
+            "Search trees, heaps, hashing",
+            "Divide-and-conquer",
+            "Dynamic programming",
+            "Greedy algorithms",
+            "Amortized analysis",
+            "Graph algorithms",
+            "Shortest paths",
+            "Network flow",
+            "Computational geometry"
+          ]
+        }
+      ]
+    },
+    "stanford": {
+      "institution": "Stanford University",
+      "department": "Computer Science",
+      "courses": [
+        {
+          "number": "CS 103",
+          "name": "Mathematical Foundations of Computing",
+          "credits": 5,
+          "prerequisites": ["CS 106B"],
+          "type": "foundation",
+          "topics": [
+            "Discrete mathematics",
+            "Propositional and predicate logic",
+            "Sets, functions, relations",
+            "Mathematical induction",
+            "Finite automata",
+            "Context-free grammars",
+            "Turing machines",
+            "Computability"
+          ]
+        },
+        {
+          "number": "CS 161",
+          "name": "Design and Analysis of Algorithms",
+          "credits": 5,
+          "prerequisites": ["CS 103", "CS 109"],
+          "type": "core",
+          "primary": true,
+          "topics": [
+            "Worst and average case analysis",
+            "Recurrences and asymptotics",
+            "Sorting, searching, selection",
+            "Binary search trees, balanced trees",
+            "Hash tables",
+            "Graph algorithms (DFS, BFS)",
+            "Shortest paths",
+            "Spanning trees",
+            "Greedy algorithms",
+            "Divide-and-conquer",
+            "Dynamic programming",
+            "NP-completeness"
+          ]
+        },
+        {
+          "number": "CS 166",
+          "name": "Data Structures",
+          "credits": 4,
+          "prerequisites": ["CS 161"],
+          "type": "advanced",
+          "topics": [
+            "Advanced data structures",
+            "Amortized analysis",
+            "Randomized data structures",
+            "Advanced tree structures",
+            "Specialized data structures"
+          ]
+        }
+      ]
+    }
+  },
+  "unified_topics": {
+    "foundations": [
+      "Discrete mathematics",
+      "Logic and proofs",
+      "Asymptotic analysis",
+      "Recursion basics"
+    ],
+    "basic_structures": [
+      "Arrays and linked lists",
+      "Stacks and queues",
+      "Trees and BST",
+      "Hash tables"
+    ],
+    "sorting_searching": [
+      "Comparison-based sorting",
+      "Non-comparison sorting",
+      "Binary search variants",
+      "Order statistics"
+    ],
+    "advanced_structures": [
+      "Balanced trees (AVL, Red-Black)",
+      "Heaps and priority queues",
+      "Tries and advanced trees",
+      "Union-Find"
+    ],
+    "graphs": [
+      "Graph representations",
+      "DFS and BFS",
+      "Shortest paths",
+      "Minimum spanning trees",
+      "Topological sorting",
+      "Network flow"
+    ],
+    "algorithm_design": [
+      "Divide and conquer",
+      "Greedy algorithms",
+      "Dynamic programming",
+      "Backtracking"
+    ],
+    "complexity": [
+      "P vs NP",
+      "NP-completeness",
+      "Reductions",
+      "Approximation algorithms"
+    ]
+  }
+}

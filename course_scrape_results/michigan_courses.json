@@ -1,0 +1,1030 @@
+[
+  {
+    "number": "EECS 110",
+    "name": "Discover Computer Science",
+    "prerequisites": [
+      "None"
+    ],
+    "description": ".Introduction to basic CS concepts (variables, conditionals, loops, functions) using an introductory programming language, such as Python. Students interact with researchers and computing professionals to learn about real-world, interdisciplinary applications of CS. Intended for students without pri",
+    "credits": 2
+  },
+  {
+    "number": "EECS 183",
+    "name": "Elementary Programming Concepts",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Fundamental concepts and skills of programming in a high-level language. Flow of control: selection, iteration, subprograms. Data structures: strings, arrays, records, lists, tables. Algorithms using selection and iteration (decision making, finding maxima/minima, searching, sorting, simulation, etc",
+    "credits": 4
+  },
+  {
+    "number": "EECS 198",
+    "name": "Special Topics",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Topics of current interest selected by the faculty. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 200",
+    "name": "Electrical Engineering Systems Design I",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Gain a systems engineering perspective of electrical engineering centered around a design competition to address a societally-relevant challenge. Apply electrical engineering concepts in circuits, computing, control, sensors, optics, power, signal processing, and wireless communications to a system ",
+    "credits": 2
+  },
+  {
+    "number": "EECS 201",
+    "name": "Computer Science Pragmatics",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 183",
+      "EECS 280",
+      "EECS 180"
+    ],
+    "description": ". Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (2 credits)The essentials of using a computer effectively. Topics covered include shells, environment, scripting, Makefiles, compilers, debugging tools, and version control. CourseProfile (ATLAS)",
+    "credits": 2
+  },
+  {
+    "number": "EECS 203",
+    "name": "Discrete Mathematics",
+    "prerequisites": [
+      "EECS 203"
+    ],
+    "description": "; No OP/F; Fewer than two previous elections of EECS 203 (incl. grades of W, I, VI, and AUD). Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Introduction to the mathematical foundations of computer science. Topics covered include: propositionaland predicate logic, set theory",
+    "credits": 4
+  },
+  {
+    "number": "EECS 215",
+    "name": "Introduction to Electronic Circuits",
+    "prerequisites": [
+      "EECS 183",
+      "EECS 280",
+      "EECS 180"
+    ],
+    "description": "and (ENGR 101 or ENGR 151 or EECS 180 or EECS 183 or preceded or accompanied by EECS 280) and (preceded or accompanied by: PHYSICS 240 or PHYSICS 260); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: Student may only receive credit for one course, EECS 210 or ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 216",
+    "name": "Introduction to Signals and Systems",
+    "prerequisites": [
+      "EECS 215",
+      "EECS 314"
+    ],
+    "description": ". Theory and practice of signals and systems engineering in continuous and discrete time. Continuous-time linear time-invariant systems, impulse response, convolution. Fourier series, Fourier transforms, spectrum, frequency response and filtering. Sampling leading to basic digital signal processing ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 230",
+    "name": "Electromagnetics I",
+    "prerequisites": [
+      "EECS 215"
+    ],
+    "description": "(Co-requisite: EECS 215); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: Student may only receive credit for one course, EECS 230 or EECS 331. (4 credits). Vector calculus. Electrostatics. Magnetostatics. Time-varying fields: Faraday\u2019s Law and displacement cu",
+    "credits": 4
+  },
+  {
+    "number": "EECS 245",
+    "name": "Mathematics for Machine Learning",
+    "prerequisites": [
+      "EECS 183",
+      "EECS 280",
+      "EECS 203",
+      "EECS 180"
+    ],
+    "description": "and (EECS 180 or EECS 183 or EECS 280 or ENGR 101 or ROB 102 or COMPFOR 131 or SI 206); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits). Mathematical foundations of machine learning and artificial intelligence, focusing primarily on linear algebra, along with select ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 270",
+    "name": "Introduction to Logic Design",
+    "prerequisites": [
+      "EECS 183",
+      "EECS 280",
+      "EECS 180"
+    ],
+    "description": "; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits). Boolean algebra, digital design techniques, logic gates, logic and state minimization, standard combinational circuits, latches and flip-flops, sequential circuits, synthesis of synchronous sequential circuits, state",
+    "credits": 4
+  },
+  {
+    "number": "EECS 280",
+    "name": "Programming and Introductory Data Structures",
+    "prerequisites": [
+      "EECS 183",
+      "EECS 180"
+    ],
+    "description": "Algorithm development and effective programming, top-down analysis, structured programming, testing and program correctness. Program language syntax and static and runtime semantics. Scope, procedure instantiation, recursion, abstract data types and parameter passing methods. Structured data types, ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 281",
+    "name": "Data Structures and Algorithms",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 203"
+    ],
+    "description": "and EECS 280; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Introduction to algorithm analysis and O-notation; Fundamental data structures including lists, stacks, queues, priority queues, hash tables, binary trees, search trees, balanced trees, and graphs; searchi",
+    "credits": 4
+  },
+  {
+    "number": "EECS 285",
+    "name": "Practical Programming in Java",
+    "prerequisites": [
+      "EECS 280"
+    ],
+    "description": "Introduction to Java programming, including language features, design principles, and programming practices. Topics include: Java syntax and semantics, object-oriented design, exception handling, graphical user interfaces, mobile-application development, asynchronous programming, and unit testing. C",
+    "credits": 2
+  },
+  {
+    "number": "EECS 291",
+    "name": "Applied Data Structures and Algorithms",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 280"
+    ],
+    "description": "Advanced programming including data structures and algorithms and their application to scientific and engineering problems. Topics include data structure design and performance implications, algorithm design and analysis, efficiency and optimization, and software-engineering principles. Prepares stu",
+    "credits": 4
+  },
+  {
+    "number": "EECS 298",
+    "name": "Special Topics",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Topics of current interest selected by the faculty and pilot versions of new courses. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 300",
+    "name": "Electrical Engineering Systems Design II",
+    "prerequisites": [
+      "EECS 200",
+      "EECS 280",
+      "EECS 215",
+      "EECS 216",
+      "EECS 230"
+    ],
+    "description": "Principles of engineering design for electrical engineering systems. Integration of electrical engineering foundational concepts to address system-level objectives. Semester-long, open-ended design based on a societally-relevant challenge. Technical topics include embedded systems fundamentals, sens",
+    "credits": 3
+  },
+  {
+    "number": "EECS 301",
+    "name": "Probabilistic Methods in Engineering",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Basic concepts of probability theory. Random variables: discrete, continuous and conditional probability distributions; averages; independence. Statistical inference: hypothesis testing and estimation. Introduction to discrete and continuous random processes. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 311",
+    "name": "Analog Circuits",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 215"
+    ],
+    "description": "DC and AC circuit models for diodes, bipolar junction transistors and field-effect transistors; small-signal and piecewise analysis of nonlinear circuits; analysis and design of single-stage and multi-stage transistor amplifiers: gain, biasing and frequency response; op-amp based filter design; non-",
+    "credits": 4
+  },
+  {
+    "number": "EECS 312",
+    "name": "Digital Integrated Circuits",
+    "prerequisites": [
+      "EECS 215"
+    ],
+    "description": ". Review of MOSFET device operation. Design of digital circuits, including static CMOS, ratioed, dynamic, and pass-transistor logic. Memory structures, including static and dynamic RAM; sequential elements; and interconnects. Analysis of circuit delay, power, and noise margins. Use of circuit simula",
+    "credits": 4
+  },
+  {
+    "number": "EECS 314",
+    "name": "Electrical Circuits, Systems, and Applications",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "and (PHYSICS 240 or PHYSICS 260). Credit Exclusions: Student may only receive credit for one course, EECS 210 or EECS 215 or EECS 216 or EECS 314. Minimum grade requirement of \u201cC-\u201d for enforced prerequisite. (4 credits). Students will learn about electrical systems operation, specifications and inte",
+    "credits": 4
+  },
+  {
+    "number": "EECS 320",
+    "name": "Introduction to Semiconductor Devices",
+    "prerequisites": [
+      "EECS 215",
+      "EECS 210"
+    ],
+    "description": "and (PHYSICS 240 or PHYSICS 260); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Introduction to semiconductors in terms of atomic bonding and electron energy bands. Equilibrium statistics of electrons and holes. Carrier dynamics; continuity, drift and diffusion cur",
+    "credits": 4
+  },
+  {
+    "number": "EECS 330",
+    "name": "Introduction to Antennas and Wireless Systems",
+    "prerequisites": [
+      "EECS 230"
+    ],
+    "description": "Electromagnetic fields and waves applied to antennas and wireless systems. The course covers wave reflection and transmission, dipoles, arrays, horn and patch antennas, waveguides, microstrip lines, resonators, and their applications in communication and radar systems. Introduction to advanced elect",
+    "credits": 4
+  },
+  {
+    "number": "EECS 334",
+    "name": "Principles of Optics",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Basic principles of optics: light sources and propagation of light; geometrical optics, lenses and imaging; ray tracing and lens aberrations; interference of light waves, coherent and incoherent light beams; Fresnel and Fraunhofer diffraction. Overview of modern optics with laboratory demonstrations",
+    "credits": 4
+  },
+  {
+    "number": "EECS 351",
+    "name": "Introduction to Digital Signal Processing",
+    "prerequisites": [
+      "EECS 216"
+    ],
+    "description": "DSP methods and applications. Sampling and reconstruction, difference equations, convolution, stability, z-transform, transfer function, frequency response, FIR and IIR, DTFT, DFT, FFT, windows, spectrogram, computer-aided filter design, correlation, multi-rate, basic image processing, discrete time",
+    "credits": 4
+  },
+  {
+    "number": "EECS 353",
+    "name": "Introduction to Communication Systems",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 306"
+    ],
+    "description": "Mathematical analysis of signals and signal processing used in analog and digital communication systems; sampling; quantization: pulse transmission: inter symbol interference; Nyquist criterion; partial response signals; eye diagrams; equalization; mixing; analog modulation and demodulation; receive",
+    "credits": 4
+  },
+  {
+    "number": "EECS 370",
+    "name": "Introduction to Computer Organization",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 270",
+      "EECS 203"
+    ],
+    "description": "and EECS 280; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Basic concepts of computer organization and hardware. Instructions executed by a processor and how to use these instructions in simple assembly-language programs. Stored-program concept. Datapath and contr",
+    "credits": 4
+  },
+  {
+    "number": "EECS 373",
+    "name": "Introduction to Embedded System Design",
+    "prerequisites": [
+      "EECS 370",
+      "EECS 270"
+    ],
+    "description": "and (EECS 370 or CMPTRSC 370) and junior or above; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits). Principles of designing application-specific computer systems that interact with the physical world. Covers memory-mapped I/O, interrupts, analog interfacing, micropro",
+    "credits": 4
+  },
+  {
+    "number": "EECS 376",
+    "name": "Foundations of Computer Science",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 203"
+    ],
+    "description": "; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits). An introduction to theory of computation. Models of computation: finite state machines, Turing machines. Decidable and undecidable problems. Polynomial time computability and paradigms of algorithm design. Computatio",
+    "credits": 4
+  },
+  {
+    "number": "EECS 388",
+    "name": "Introduction to Computer Security",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Introduction to the principles and practices of computer security as applied to software, host systems, and networks. Covers the foundations of building, using and managing secure systems. Topics include standard cryptographic functions and protocols, threats and defenses for real-world systems, inc",
+    "credits": 4
+  },
+  {
+    "number": "EECS 390",
+    "name": "Programming Paradigms",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Survey of programming language features and paradigms and how to effectively use them. Introduces common features for program execution, data, and resource management. Exploration of paradigms including imperative, functional, object-oriented, and declarative programming, as well as advanced program",
+    "credits": 4
+  },
+  {
+    "number": "EECS 398",
+    "name": "Special Topics",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Topics of current interest selected by the faculty. Lecture, seminar, or laboratory. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 399",
+    "name": "Directed Study",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "This course provides an opportunity for undergraduate students to work on research problems in EECS or areas of special interest such as design problems. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 402",
+    "name": "Computer Programming For Scientists and Engineers",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Presents concepts and hands-on experience for designing and writing programs using one or moreprogramming languages currently important in solving real-world problems. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 403",
+    "name": "Graduate Foundations of Data Structures and Algorithms",
+    "prerequisites": [
+      "EECS 402",
+      "EECS 203"
+    ],
+    "description": "; No OP/F.] Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits)Introduction to algorithm analysis and O-notation; Fundamental data structures including lists, stacks, queues, priority queues, hash tables, binary trees, search trees, balanced trees and graphs; searching and sortin",
+    "credits": 4
+  },
+  {
+    "number": "EECS 408",
+    "name": "Advanced Operating Systems Projects",
+    "prerequisites": [
+      "EECS 482"
+    ],
+    "description": "in EECS 482. (2 credits) Hands-on experience with advanced operating systems concepts. Includes topics such as managingmultiprocessors, building and using spinlocks, suspending and waking processors with interprocessor interrupts, inheriting address spaces, sharing data through copy-on-write, managi",
+    "credits": 2
+  },
+  {
+    "number": "EECS 409",
+    "name": "Data Science Seminar",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "The MIDAS Seminar Series features leading data scientists from around the world and across the U-M campuses addressing a variety of topics in data science, and sharing their vision regarding the future of the field. These thought leaders are invited from academia, industry and government. CourseProf",
+    "credits": 1
+  },
+  {
+    "number": "EECS 411",
+    "name": "Microwave Circuits I",
+    "prerequisites": [
+      "EECS 311",
+      "EECS 330"
+    ],
+    "description": "Transmission-line theory, microstrip and coplanar lines, S-parameters, signal-flow graphs, matching networks, directional couplers, low-pass and band-pass filters, diode detectors. Design, fabrication and measurements (1-10GHz) of microwave-integrated circuits using CAD tools and network analyzers. ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 413",
+    "name": "Monolithic Amplifier Circuits",
+    "prerequisites": [
+      "EECS 311",
+      "EECS 320"
+    ],
+    "description": "Micro electro mechanical systems (MEMS), devices and technologies. Micro-machining and microfabrication techniques, including planar thin-film processing, silicon etching, wafer bonding, photolithography, deposition and etching. Transduction mechanisms and modeling in different energy domains. Analy",
+    "credits": 4
+  },
+  {
+    "number": "EECS 416",
+    "name": "Elec for Bio",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 418",
+    "name": "Power Electronics",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 215"
+    ],
+    "description": "AC-DC, DC-DC switch-mode power converter topologies. Power converter topologies. Power Semiconductor devices, inductors, capacitors. Loss mechanisms, thermal analysis. Drive, snubber circuits. Laboratory experience with power electronic circuits. Projects are overseen/graded by faculty and may also ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 421",
+    "name": "Properties of Transistors",
+    "prerequisites": [
+      "EECS 320"
+    ],
+    "description": "In depth understanding of the device physics and working principle of some basic IC components: metal-semiconductor junctions, P-N junctions, metal-oxide-semiconductor junctions, MOSFETs and BJTs. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 423",
+    "name": "Micro/Nano Device Fabrication and Characterization",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Basic principles and hands-on experience with semiconductor micro/nano-fabrication technologies. Students will perform computer simulations of fabrication steps, and will practice some of the key processing steps used in fabricating different devices in modern IC manufacturing. Students will test an",
+    "credits": 4
+  },
+  {
+    "number": "EECS 425",
+    "name": "Integrated Microsystems Laboratory",
+    "prerequisites": [
+      "EECS 311",
+      "EECS 414",
+      "EECS 312"
+    ],
+    "description": "Development of a complete integrated microsystem, from functional definition to final test. MEMS-based transducer design and electrical, mechanical and thermal limits. Design of MOS interface circuits. MEMS and MOS chip fabrication. Mask making, pattern transfer, oxidation, ion implantation and meta",
+    "credits": 4
+  },
+  {
+    "number": "EECS 427",
+    "name": "Very Large Scale Integrated (VLSI) Design I",
+    "prerequisites": [
+      "EECS 312",
+      "EECS 270"
+    ],
+    "description": "Design I",
+    "credits": 4
+  },
+  {
+    "number": "EECS 428",
+    "name": "Introduction to Quantum Nanotechnology",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "This course introduces students to the emerging new field of quantum base nanotechnology. The course includes a range of topics such as the quantum vibrator, resonant tunneling, quantum circuits, a quantum flip flop, quantum information, quantum vacuum, and the role of quantum behavior in nano-devic",
+    "credits": 3
+  },
+  {
+    "number": "EECS 429",
+    "name": "Semiconductor Optoelectronic Devices",
+    "prerequisites": [
+      "EECS 320"
+    ],
+    "description": "Materials for optoelectronics, optical processes in semiconductors, absorption and radiation, transition rates and carrier lifetime. Principles of LEDs, lasers, photodetectors, modulators and solar cells. Optoelectronic integrated circuits. Designs, demonstrations and projects related to optoelectro",
+    "credits": 4
+  },
+  {
+    "number": "EECS 435",
+    "name": "Fourier Optics",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 306"
+    ],
+    "description": "Basic physical optics treated from the viewpoint of Fourier analysis. Fourier-transform relations in optical systems. Theory of image formation and Fourier transformation by lenses. Frequency response of diffraction-limited and aberrated imaging systems. Coherent and incoherent light. Comparison of ",
+    "credits": 3
+  },
+  {
+    "number": "EECS 438",
+    "name": "Advanced Lasers and Optics Laboratory",
+    "prerequisites": [
+      "EECS 334",
+      "EECS 434"
+    ],
+    "description": "Construction and design of lasers; gaussian beams; nonlinear optics; fiber optics; detectors; dispersion; Fourier optics; spectroscopy. Project requires the design and set-up of a practical optical system. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 440",
+    "name": "Extended Reality for Social Impact",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Design, development, and application of virtual and augmented reality software for social impact. Topicsinclude: virtual reality, augmented reality, game engines, ethics / accessibility, interaction design patterns, agile project management, stakeholder outreach, XR history / culture, and portfolio ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 441",
+    "name": "Mobile App Development for Entrepreneurs",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Best practices in the software engineering of mobile applications and best practices of software entrepreneurs in the design, production and marketing of mobile apps. Students will engage in the hands-on practice of entrepreneurship by actually inventing, building and marketing their own mobile apps",
+    "credits": 4
+  },
+  {
+    "number": "EECS 442",
+    "name": "Computer Vision",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "; No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: Student may only receive credit for one course, EECS 442 and EECS 504. (4 credits) An introduction to 2D and 3D computer vision. Topics include: cameras models, the geometry of multiple vi",
+    "credits": 4
+  },
+  {
+    "number": "EECS 443",
+    "name": "Senior Thesis",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Students develop and carry out a research plan in collaboration with a sponsoring faculty member. Students present a research proposal to be approved by both the faculty member and the chief program advisor or designate. Students submit and present a thesis to be evaluated by the sponsoring faculty ",
+    "credits": 3
+  },
+  {
+    "number": "EECS 444",
+    "name": "Analysis of Societal Networks",
+    "prerequisites": [
+      "EECS 301"
+    ],
+    "description": "; No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: Student may only receive credit for one course, EECS 444 and EECS 544. (4 credits) In the modern world we depend on the efficiency of a myriad of societal networks to transact many activities. This course analy",
+    "credits": 4
+  },
+  {
+    "number": "EECS 445",
+    "name": "Introduction to Machine Learning",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "; No OP/F; Enrollment in one minor elective allowed for Computer Science Minors. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: No credit granted for EECS 445 if the student has credit for or is currently enrolled in EECS 453, EECS 545, or EECS 553. (4 credits) Theory",
+    "credits": 4
+  },
+  {
+    "number": "EECS 448",
+    "name": "Applied Machine Learning for Modeling Human Behavior",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "; No OP/F; or Graduate Standing in CSE. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Machine learning, with a focus on human behavior, across multiple modalities including speech and text. Teams complete projects based primarily on their individual interests centered on mo",
+    "credits": 4
+  },
+  {
+    "number": "EECS 449",
+    "name": "Conversational Artificial Intelligence",
+    "prerequisites": [
+      "EECS 280"
+    ],
+    "description": "The science and art of creating conversational AI spans multiple areas in computer science. Students willlearn about and leverage advances in these areas to create conversational virtual assistants spanning natural language processing, dialogue management, response generation, and other applications",
+    "credits": 4
+  },
+  {
+    "number": "EECS 452",
+    "name": "Digital Signal Processing Design Laboratory",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 455",
+      "EECS 351"
+    ],
+    "description": "; No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits)Architecture features of single-chip DSP processors are introduced in lecture. Laboratory exercises using two different state-of-the-art fixed-point processors include sampling, A/D and D/A conver",
+    "credits": 4
+  },
+  {
+    "number": "EECS 453",
+    "name": "Principles of Machine Learning",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 301",
+      "EECS 351"
+    ],
+    "description": "and (EECS 351 or MATH 214 or MATH 217 or MATH 296 or MATH 417 or MATH 419 or ROB 101); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. Credit Exclusions: No credit granted for EECS 453 if the student has credit for or is currently enrolled in EECS 445, EECS 545, or EECS 553. (4 ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 455",
+    "name": "Wireless Communications Systems",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 301"
+    ],
+    "description": "Digital communication signals and systems; fundamental limits on reliable communications, energy and bandwidth efficiency trade-offs; optimum receiver principles, modulation techniques including phase shift keying, quadrature modulation and OFDM; block and convolutional coding and decoding; applicat",
+    "credits": 4
+  },
+  {
+    "number": "EECS 456",
+    "name": "Internet Foundations",
+    "prerequisites": [
+      "EECS 300",
+      "EECS 270"
+    ],
+    "description": "Fundamentals of the internet are introduced. Four layers of the internet are described, including the application, transport, network and link layers. TCP and UDP protocols in the transport layer are studied, along with IP in the network layer. Routers are described that perform the IP functions. Et",
+    "credits": 4
+  },
+  {
+    "number": "EECS 460",
+    "name": "Control Systems Analysis and Design",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 306"
+    ],
+    "description": "Basic techniques for analysis and design of controllers applicable in any industry (e.g. automotive, aerospace, computer, communication, chemical, bioengineering, power, etc.) are discussed. Both time- and frequency-domain methods are covered. Root locus, Nyquist and Bode plot-based techniques are o",
+    "credits": 4
+  },
+  {
+    "number": "EECS 461",
+    "name": "Embedded Control Systems",
+    "prerequisites": [
+      "EECS 216"
+    ],
+    "description": "Basic interdisciplinary concepts needed to implement a microprocessor based control system. Sensors and actuators. Quadrature decoding. Pulse width modulation. DC motors. Force feedback algorithms for human computer interaction. Real time operating systems. Networking. Use of MATLAB to model hybrid ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 463",
+    "name": "Power Systems Design and Operation",
+    "prerequisites": [
+      "EECS 216",
+      "EECS 215"
+    ],
+    "description": "and EECS 215 and EECS 216; No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Power systems overview; Fundamentals: phasors, complex power, three phases; transformer modeling; Transmission line modeling; Power flow analysis; Power system control; P",
+    "credits": 4
+  },
+  {
+    "number": "EECS 467",
+    "name": "Autonomous Robotics Design Experience",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 373",
+      "EECS 367"
+    ],
+    "description": "and (EECS 367 or EECS 373); No OP/F. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Software methods and implementation for robot perception, world mapping, and control, using physical robots. Topics include: sensors, sensor processing, control, motion planning, localization",
+    "credits": 4
+  },
+  {
+    "number": "EECS 470",
+    "name": "Computer Architecture",
+    "prerequisites": [
+      "EECS 370",
+      "EECS 270"
+    ],
+    "description": "and (EECS 370 or CMPTRSC 370); No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits) Design and organization of a computer\u2019s components including processors, memories, peripherals, and I/Os. Examines and defines trade-offs on how hardware and software",
+    "credits": 4
+  },
+  {
+    "number": "EECS 471",
+    "name": "Applied Parallel Programming with GPUs",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 370"
+    ],
+    "description": "Parallel computing and application development for massively parallel processors such as GPUs. Focuses on forms of parallelism, programming models such as CUDA, mapping computations to parallel hardware, efficient data structures, and paradigms for efficient parallel algorithms. Students will gain h",
+    "credits": 4
+  },
+  {
+    "number": "EECS 472",
+    "name": "Computer Architecture Project",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Team-based design of an advanced (e.g. out-of-order, multi-core, SMT) processor using an HDL. Students will design, build, and verify the processor using state-of-the-art design tools and techniques. Coverage includes testing strategies, advanced memory system design (e.g. LSQs, non-blocking caches)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 473",
+    "name": "Advanced Embedded Systems",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 215",
+      "EECS 373"
+    ],
+    "description": "; No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits)Design of hardware and software for modern embedded systems. Real-time operating systems. Device drivers for general operating systems. PCB design including power integrity and electromagnetic int",
+    "credits": 4
+  },
+  {
+    "number": "EECS 474",
+    "name": "Algorithms for Data Science",
+    "prerequisites": [
+      "EECS 301"
+    ],
+    "description": "and (STATS 250 or STATS 280 or STATS 412 or STATS 425 or MATH 425 or EECS 301 or IOE 265 or DATASCI 101); No OP/F; or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits)Fundamental techniques and mathematical methods for designing and analyzing algorithms used ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 475",
+    "name": "Introduction to Cryptography",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Covers fundamental concepts, algorithms, and protocols in cryptography. Topics: ancient ciphers, Shannon theory, symmetric encryption, public key encryption, hash functions, digital signatures, key distribution. Emphasizes attack models, precise definitions of security, reductions, and proof techniq",
+    "credits": 4
+  },
+  {
+    "number": "EECS 476",
+    "name": "Data Mining",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "(minimum grade of C or better, No OP/F); or EECS 403 (minimum grade of B or better, No OP/F); or graduate standing in CSE. Enrollment in one minor elective allowed for Computer Science Minors. Minimum grade requirement listed above for enforced prerequisites, C or better OR B or better. (4 credits).",
+    "credits": 4
+  },
+  {
+    "number": "EECS 477",
+    "name": "Introduction to Algorithms",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Fundamental techniques for designing efficient algorithms and basic mathematical methods for analyzing their performance. Paradigms for algorithm design: divide-and-conquer, greedy methods, graph search techniques, dynamic programming. Design of efficient data structures and analysis of the running ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 478",
+    "name": "Logic Circuit Synthesis and Optimization",
+    "prerequisites": [
+      "EECS 303",
+      "EECS 270",
+      "EECS 203"
+    ],
+    "description": "and (EECS 270 or CMPTRSC 270); No OP/F; and senior or graduate standing. Minimum grade requirement of \u201cC\u201d for enforced prerequisite. (4 credits)Advanced design of logic circuits. Technology constraints. Theoretical foundations. Computer-aided design algorithms. Two-level and multilevel optimization ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 479",
+    "name": "Introduction to Quantum Computing",
+    "prerequisites": [
+      "EECS 280",
+      "EECS 370"
+    ],
+    "description": "A practical approach towards exploring how each layer of the computing stack is impacted by quantum computing. Quantum logic design using classical oracles, phase kickback, and entanglement. Quantum algorithms including Deutsch-Jozsa, Grover\u2019s, and Shor\u2019s. Error correction schemes including Shor and",
+    "credits": 4
+  },
+  {
+    "number": "EECS 480",
+    "name": "Social Computing Systems",
+    "prerequisites": [
+      "EECS 493",
+      "EECS 485"
+    ],
+    "description": "Design and creation of computing systems that mediate, facilitate , or augment social interactions. Introduces social computing research, and relevant web-based tools for creating systems that allow multiple users to interact. A team project provides experience designing a system with multiple stake",
+    "credits": 4
+  },
+  {
+    "number": "EECS 481",
+    "name": "Software Engineering",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Pragmatic aspects of the production of software systems, dealing with structuring principles, design methodologies and informal analysis. Emphasis is given to development of large, complex software systems. A term project is usually required. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 482",
+    "name": "Introduction to Operating Systems",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 370"
+    ],
+    "description": "Operating system design and implementation: multi-tasking; concurrency and synchronization; inter-process communication; deadlock; scheduling; resource allocation; memory and storage management; input-output; file systems; protection and security. Students write several substantial programs dealing ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 483",
+    "name": "Compiler Construction",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 370"
+    ],
+    "description": "Introduction to compiler construction. Topics covered will include the following: lexical scanning, parsing (top-down and bottom-up), abstract syntax trees, semantic analysis, code generation and optimization. Students will build a working compiler for a high-level programming language. CourseProfil",
+    "credits": 4
+  },
+  {
+    "number": "EECS 484",
+    "name": "Database Management Systems",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "or EECS 403 (minimum grade of B or better, No OP/F); or graduate standing in CSE. Enrollment in one minor elective allowed for Computer Science Minors. Minimum grade requirement listed above for enforced prerequisites, C or better OR B or better. (4 credits)Concepts and methods for the design, creat",
+    "credits": 4
+  },
+  {
+    "number": "EECS 485",
+    "name": "Web Systems",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Concepts surrounding web systems, applications, and internet scale distributed systems. Topics covered include client/server protocols, security, information retrieval and search engines, scalable data processing, and fault tolerant systems. The course has substantial projects involving development ",
+    "credits": 4
+  },
+  {
+    "number": "EECS 486",
+    "name": "Informational Retrieval and Web Search",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Covers background and recent advances in information retrieval (IR): indexing, processing, querying, classifying data. Basic retrieval models, algorithms, and IR system implementations. Focuses on textual data, but also looks at images/videos, music/audio, and geospatial information. Web search, inc",
+    "credits": 4
+  },
+  {
+    "number": "EECS 487",
+    "name": "Introduction to Natural Language Processing",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Fundamental theories and practical methods in natural language processing (NLP). Topics include syntax and parsing, lexical semantics and compositional semantics, discourse analysis, as well as applications in information extraction, sentiment analysis, question answering, summarization, dialogue sy",
+    "credits": 4
+  },
+  {
+    "number": "EECS 489",
+    "name": "Computer Networks",
+    "prerequisites": [
+      "EECS 281",
+      "EECS 370"
+    ],
+    "description": "Protocols and architectures of computer networks with a specific focus on the Internet. Topics include socket programming, naming and addressing, video streaming and content distribution, flow and congestion control, routing, and cloud, datacenter, and software-defined networks. Students write sever",
+    "credits": 4
+  },
+  {
+    "number": "EECS 490",
+    "name": "Programming Languages",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Programming languages are rich mathematical structures and powerful user interfaces. Student will learn about modern languages from the perspective of both language designers and users, building up from mathematical first principles, and covering human factors in language design, language prototypin",
+    "credits": 4
+  },
+  {
+    "number": "EECS 491",
+    "name": "Introduction to Distributed Systems",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Design and implementation of scalable, performant, and reliable distributed systems. Covers abstractions for simplifying development of distributed systems, techniques used to implement these abstractions, and case studies on the use of these techniques in real-world systems. Includes topics such as",
+    "credits": 4
+  },
+  {
+    "number": "EECS 492",
+    "name": "Introduction to Artificial Intelligence",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Introduction to the core concepts of AI, organized around building computational agents. Emphasizes the application of AI techniques. Topics include search, logic, knowledge representation, reasoning, planning, decision making under uncertainty, and machine learning. CourseProfile (ATLAS)",
+    "credits": 4
+  },
+  {
+    "number": "EECS 493",
+    "name": "User Interface Development",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Concepts and techniques for designing computer system user interfaces to be easy to learn and use, with an introduction to their implementation. Task analysis, design of functionality, display and interaction design, and usability evaluation. Interface programming using an object-oriented applicatio",
+    "credits": 4
+  },
+  {
+    "number": "EECS 494",
+    "name": "Computer Game Design and Development",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Design, development, and application of digital games. Topics include: game engines, design patterns, shaders and graphics programming, agile development methods, iterative game/experience design, project management and resource allocation, virtual reality, classic games, multidisciplinary relations",
+    "credits": 4
+  },
+  {
+    "number": "EECS 495",
+    "name": "Accessible Computing",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Team-based development of technology systems focused on disability, accessibility, or chronic illness. Students work closely with people with disabilities to develop technologies addressing a specific need. Covers design methods and problem-solving strategies; human factors; human-machine interfaces",
+    "credits": 4
+  },
+  {
+    "number": "EECS 496",
+    "name": "Major Design Experience Professionalism",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Design principles for multidisciplinary team projects, team strategies, entrepreneurial skills, ethics, social and environmental awareness, and life long learning. CourseProfile (ATLAS)",
+    "credits": 2
+  },
+  {
+    "number": "EECS 497",
+    "name": "Human-Centered Software and Design and Development",
+    "prerequisites": [
+      "EECS 281"
+    ],
+    "description": "Team-based, user-centered design and development of complex software systems incorporating effective design strategies and project management methodologies. Topics include customer discovery, contextual inquiry, prototyping, process models, creative problem solving, inclusive thinking, team dynamics",
+    "credits": 4
+  },
+  {
+    "number": "EECS 498",
+    "name": "Special Topics",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Topics of current interest selected by the faculty. Lecture, seminar or laboratory. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 499",
+    "name": "Directed Study",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "This course provides an opportunity for undergraduate students to work on substantial research problems in EECS or areas of special interest such as design problems. CourseProfile (ATLAS)",
+    "credits": null
+  },
+  {
+    "number": "EECS 504",
+    "name": "Foundations of Computer Vision",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "The course lays a framework for the extraction of useful information from images. Topics include representations of visual content (e.g., functions, points, graphs); visual invariance; mathematical and computational models of visual content; optimization methods for vision. Theoretical treatment and",
+    "credits": 3
+  },
+  {
+    "number": "EECS 507",
+    "name": "Introduction to Embedded System Research",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Establish a foundation in research related to embedded system analysis, design, and synthesis. Lectures, assigned reading, and student presentations used to survey fundamental embedded systems topics. The second half-semester focuses on an important and timely research topic. Survey-only (3 credit) ",
+    "credits": 3
+  },
+  {
+    "number": "EECS 522",
+    "name": "Analog Integrated Circuits",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Review of integrated circuit fabrication technologies and BJT and MOS transistor models. Detailed analysis and design of analog integrated circuits, including power amplifiers, voltage references, voltage regulators, rectifiers, oscillators, multipliers, mixers, phase detectors and phase-locked loop",
+    "credits": 4
+  },
+  {
+    "number": "EECS 523",
+    "name": "Digital Integrated Technology",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "and EECS 311 and EECS 320.",
+    "credits": 4
+  },
+  {
+    "number": "EECS 542",
+    "name": "Advanced Topics in Computer Vision",
+    "prerequisites": [
+      "EECS 504",
+      "EECS 442"
+    ],
+    "description": "Advanced topics in computer vision. Topics are selected from large-scale vision and language foundationmodels, generative methods such as denoising diffusion and energy-based models, discriminative methods such as contrastive learning and few-shot classification, neural net architectures, model opti",
+    "credits": 3
+  },
+  {
+    "number": "EECS 545",
+    "name": "Machine Learning (CSE)",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Advisory Prerequisite: Coursework in probability, linear algebra, and programming.",
+    "credits": 3
+  },
+  {
+    "number": "EECS 553",
+    "name": "Machine Learning (ECE)",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Advisory Prerequisite: Graduate coursework in probability and linear algebra.",
+    "credits": 3
+  },
+  {
+    "number": "EECS 570",
+    "name": "Parallel Computer Architecture",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Architectures for explicit parallelism. Multithreaded processors, small- and large-scale multiprocessor systems. Shared-memory coherence and consistency. Effect of architecture on communication latency, bandwidth, and overhead. Latency tolerance techniques. Interconnection networks. Case studies. Te",
+    "credits": 4
+  },
+  {
+    "number": "EECS 571",
+    "name": "Principles of Real-Time Computing",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Principles of real-time computing based on high performance, ultra reliability and environmental interface. Architectures, algorithms, operating systems and applications that deal with time as the most important resource. Real-time scheduling, communications and performance evaluation. CourseProfile",
+    "credits": 4
+  },
+  {
+    "number": "EECS 573",
+    "name": "Microarchitecture",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Graduate-level introduction to the foundations of high performance microprocessor implementation. Problems involving instruction supply, data supply and instruction processing. Compile-time vs. run-time tradeoffs. Aggressive branch prediction. Wide-issue processors, in-order vs. out-of-order executi",
+    "credits": 3
+  },
+  {
+    "number": "EECS 578",
+    "name": "Correct Operation for Processors and Embedded Systems",
+    "prerequisites": [
+      "EECS 470"
+    ],
+    "description": "introduction to topics in correctness of modern processors, embedded systems, and accelerator designs (e.g., GPUs). Robust and reliable design techniques. Hardware security assurance. Design verification: simulation, formal techniques, and post-silicon validation. Quality of services and energy mana",
+    "credits": 4
+  },
+  {
+    "number": "EECS 579",
+    "name": "Digital Systems Testing",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Overview of fault-tolerant computing. Fault sources and models. Testing process. Combinational circuit testing. D-Algorithm and PODEM. Sequential circuit testing. Checking experiments. RAM and microprocessor testing. Fault simulation. Design for testability. Testability measures. Self-testing circui",
+    "credits": 4
+  },
+  {
+    "number": "EECS 627",
+    "name": "VLSI Design II",
+    "prerequisites": [
+      "None"
+    ],
+    "description": "Advanced very large scale integrated (VLSI) circuit design. Design methodologies (architectural simulation, hardware description language design entry, silicon compilation, and verification), microarchitectures, interconnect, packaging, noise sources, circuit techniques, design for testability, desi",
+    "credits": 4
+  },
+  {
+    "number": "EECS 628",
+    "name": "Advanced High Performance VLSI Design",
+    "prerequisites": [
+      "EECS 627"
+    ],
+    "description": "Advanced issues in VLSI design addressing the areas of high performance, low power and reliability. Topics covered include recent approaches in leakage control, high speed on-chip communication, memory design, soft error failures, noise analysis and control, error tolerant design and new circuit fam",
+    "credits": null
+  }
+]

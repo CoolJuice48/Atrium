@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/.next/
+.npm
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build artifacts
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Indexes and embeddings (generated, do not commit)
+textbook_index/
+**/textbook_index/
+*.pkl
+*.faiss
+
+# PDFs and converted content (user-provided)
+pdfs/
+converted/
+**/pdfs/
+**/converted/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/

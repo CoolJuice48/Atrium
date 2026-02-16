@@ -1,0 +1,862 @@
+/* ====================================================================================== *\
+   Global Elements - General Layout
+\* ====================================================================================== */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video, input {
+	border: medium none;
+	font-family: "Trebuchet MS", "Tahoma", "Arial", Sans-serif;
+	font-size: 12px;
+	line-height: 1.4em;
+	padding: 0px;
+	margin: 0px auto;
+	outline-style: none;		
+}
+
+body {
+	background: #fbfbf9;
+}
+
+html {
+	overflow-y: scroll;
+}
+
+table, tr, td {
+	border-collapse: collapse;
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+	color: #3a5fcd;
+	font-size: inherit;
+}
+
+a:hover {
+	text-decoration: underline; 
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal;
+}
+
+.ralign {
+	text-align: right;
+}
+
+.large {
+	font-size: 16px;	
+}
+
+.larger {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.largest {
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.noDisplay {
+	display: none;
+}
+
+.fullWidth {
+	width: 100%;
+}
+
+#footerStripe {
+	width: 960px;
+	border-top: 1px solid #dddddd;
+	clear: both;	
+	text-align: center;
+	padding-top: 5px;
+	padding-bottom: 25px;
+	color: #666666;
+	margin-top: 30px;
+}
+
+#footerStripe a {
+	color: #666666;;	
+}
+
+
+/*Header*/
+.clearfix {display: inline-block;}
+.wrap {
+	max-width: 1170px;
+	margin:0 auto;
+	box-sizing:border-box;
+	padding:22px 10px 30px 10px;
+}
+#header {
+	height: 86px;
+	background: #8C1515;
+}
+#hdr-left {
+	width:66.66667%;
+	float:left;
+}
+#header #logo {
+	border-right:1px solid #f2f1eb;
+	display: table-cell;
+	float:none;
+	padding:0 10px 0 0;
+	vertical-align: middle;
+}
+#logo img {
+	max-width:160px;
+	display: block;
+	height: auto;
+	vertical-align: middle;
+}
+#sitename {
+	display: table-cell;
+	height: auto;
+	vertical-align: bottom;
+	padding-left:10px;
+}
+#sitename #bulletintext {
+	color:#f2f1eb;
+	font-family: 'Source Sans Pro', sans-serif;
+	font-size: 24.5px;
+	line-height: 24.5px;
+	font-weight: 300;
+	margin-bottom:-3px;
+	text-rendering:optimizelegibility;
+}
+
+#sitename a {
+	color:#f2f1eb;
+	text-decoration: none;
+}
+#bulletintext small {
+	display: block;
+	font-size:.75em;
+	line-height:.75em;
+}
+
+#header #topNav {
+	float: right;
+	text-align: right;
+	margin-top: 12px;
+	font-size: 11px;
+	color: #ffffff;
+}
+
+#header #topNav #adminNav {
+	font-size: 11px;
+	padding-bottom: 15px;
+}
+
+#header #topNav #adminNav a {
+	color: #dd9999;
+}
+
+#header #topNav #adminNav a:hover {
+	color: #ffffff;
+}
+
+#header #topNav #adminNav .bold {
+	font-weight: bold;
+	font-size: 11px;
+}
+
+#header #topNav a {
+	color: #ffdddd;
+}
+
+#header #topNav a:hover {
+	color: #ffffff;
+}
+
+#container {
+	width: 960px;
+}
+
+/* ====================================================================================== *\
+   Search Page - Top Controls
+\* ====================================================================================== */
+
+#topRow {
+	margin: 20px 0px;
+}
+
+#topRow table {
+	margin: 0px;
+	border-spacing: 0px;
+}
+
+#years {
+	vertical-align: bottom;
+	padding: 0px;
+}
+
+#years td {
+	
+	white-space: nowrap;
+}
+
+#years a {
+	font-size: 10px;
+	color: black;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+#years td.selected {
+	background-image: url(../images/year_tab.d2fa6997c1675cf9.png);
+	width: 80px;
+	height: 16px;
+	background-repeat: no-repeat;
+	background-position: right;
+}
+
+#years td.selected a {
+	padding-left: 16px;
+	font-size: 11px;
+	font-weight: bold;
+}
+
+
+
+#noteBanner td.left {
+	background-image: url(../images/rounded_corners_left.5770c131a100cb62.png);
+	height: 57px;
+	width: 10px;
+}
+
+#noteBanner td.right {
+	background-image: url(../images/rounded_corners_right.4da35e6a7729230c.png);
+	height: 57px;
+	width: 10px;
+}
+
+#noteBanner td.content {
+	background-color: #f8f3e5;
+	padding: 0px;
+}
+
+
+#topControls td.left {
+	background-image: url(../images/rounded_corners_left.5770c131a100cb62.png);
+	height: 57px;
+	width: 10px;
+}
+
+#topControls td.right {
+	background-image: url(../images/rounded_corners_right.4da35e6a7729230c.png);
+	height: 57px;
+	width: 10px;
+}
+
+#topControls td.contentHeader {
+	padding-left: 20px;
+	background-color: #f8f3e5;
+	padding: 0px;
+	text-align: right;
+	width: 145px;
+}
+
+#topControls td.contentSpacer {
+	background-color: #f8f3e5;
+}
+
+#topControls td.printContent {
+	background-color: #f8f3e5;
+	padding: 0px;
+	width: 770px;
+}
+
+#topControls td.content {
+	background-color: #f8f3e5;
+	padding: 0px;	
+}
+
+#topControls td.spacer {
+	width: 10px;
+}
+
+#topControls #searchbox .inputBox {
+	padding: 2px;
+	border: 1px solid #b7b7b7;
+	width: 360px;
+	height: 18px;
+}
+
+#topControls #searchbox #submit {
+	font-weight: bold;
+	background-color: #F8F3E5;
+}
+
+#search_courses_input {
+	color:#333333;
+	float:left;
+	font-size:100%;
+	height:1.2em;
+	line-height:1.2em;
+	margin:0 5px 0 2px;
+	padding:0.5em;
+	width:300px;
+}
+
+#topControls #bubbles {
+	height: 46px;
+	width: 49px;
+	background-image: url(../images/bubbles.2a61ebea718e455f.png);
+	background-repeat: no-repeat;
+	background-position: bottom;
+}
+
+#topControls .content a {
+	color: #595959;	
+}
+
+#topControls .content a:hover {
+	color: #595959;	
+	text-decoration: none;
+}
+
+#topControls #browseBySchedule {
+	width: 70px;
+}
+
+#resultsHeader {
+	width: 960px;
+	height: 25px;
+	background-color: #f8f3e5;
+	border-top: 2px solid #7a0000;
+	overflow: hidden;
+}
+
+#resultsHeader .resultsSummary {
+	width: 650px;
+	padding-left: 5px;
+	float: left;
+}
+
+#resultsHeader .printButton {
+	padding-top: 3px;
+	padding-right: 8px;
+	float: right;	
+}
+
+#resultsHeader .searchTerm {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+#resultsHeader #excelPanel {
+	padding: 10px 10px 15px 20px;
+	position: absolute;
+	width: 231px;
+	background-color: #F8F3E5;
+	border: 2px solid #B6AC92;
+	z-index: 1;
+	line-height: 20px;
+}
+
+#resultsHeader #excelPanel #excelPanelTitle {
+	font-size: 15px;
+	font-weight: bold;
+	padding-bottom: 10px;
+}
+
+#resultsHeader #excelPanel label {
+	padding-left: 3px;
+}
+
+#resultsHeader #excelPanel button {
+	margin-top: 10px;
+	padding: 2px 5px;
+	background-color: #F8F3E5;
+	border: 1px solid #B6AC92;
+	cursor: pointer;
+}
+
+/* ====================================================================================== *\
+   Search Page - Main Content
+\* ====================================================================================== */
+
+#mainContent {
+	width: 960px;
+	overflow: hidden;
+}
+
+/* ====================================================================================== *\
+   Search Page - Departments Browser
+\* ====================================================================================== */
+
+#mainContent .departmentsContainer {
+	padding: 5px 10px 10px;	
+	margin: 0px;
+}
+
+#mainContent .departmentsContainer ul {
+	width: 50%;
+	float: left;
+}
+
+#mainContent .departmentsContainer li {
+	font-size: 13px;
+	list-style: none;
+}
+
+#mainContent .departmentsContainer .schoolName {
+	clear: left;
+	padding: 12px 0px 1px;
+	font-size: 15px;
+	border-bottom: 1px solid #f1f1f1;
+	margin-bottom: 4px;
+	font-weight: bold;
+}
+
+/* ====================================================================================== *\
+   Search Page - Search Results
+\* ====================================================================================== */
+
+#searchResults {
+	width: 725px;
+	float: left;
+}
+
+#searchResults .searchResult {
+	margin: 0;	
+	padding-top: 10px;
+	padding-bottom: 15px;	
+	padding-left: 5px;
+	border-bottom: 1px solid #dddddd;
+}
+
+#searchResults .searchResult-noBorder {
+	margin: 0;	
+	padding-top: 10px;
+	padding-bottom: 15px;	
+	padding-left: 5px;
+}
+
+#searchResults .courseInfo {
+	margin: 0;
+	width: 685px;	
+	display: block;	
+}
+
+
+#searchResults .courseNumber {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+#searchResults .courseTitle {
+	font-size: 16px;
+}
+
+#searchResults .courseDescription {
+	padding-left: 10px;
+	padding-top: 3px;
+	font-size: 12px;
+}
+
+#searchResults .courseDescription a {
+	color: black;
+}
+
+#searchResults .courseAttributes {
+	padding-left: 10px;
+	padding-top: 3px;
+	font-size: 12px;
+	font-weight: bold;
+	color: green;
+}
+
+#searchResults .courseAttributes .instructorLink {
+	color: green;
+}
+
+#searchResults .relatedLinks {	
+	padding-left: 10px;
+	padding-top: 5px;
+}
+
+
+/* ====================================================================================== *\
+   Search Page - Search Results (Time Schedule View)
+\* ====================================================================================== */
+
+#searchResults .sectionInfo {
+	padding-left: 5px;	
+	padding-top: 10px;
+}
+
+#searchResults .sectionContainer {
+	background-color: #f8f3e5;
+	padding: 7px;
+}
+
+#searchResults .sectionContainerTerm {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+#searchResults .sectionDetails {
+	background-color: #ffffff;
+	font-weight: normal;
+	font-size: 12px;
+	padding: 5px;
+	line-height: 20px;
+	margin-bottom: 7px;
+	list-style: none;
+}
+
+#searchResults .boldText {
+	font-weight: bold;	
+}
+
+
+#searchResults .sectionTable .tableHeader {
+	text-align: left;
+	font-weight: bold;
+	background-color: #f8f3e5;
+	border-bottom: 1px solid #7a0000;
+	padding-left: 5px;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+#searchResults .sectionTable .tableCellBorderless {	
+	padding-left: 5px;	
+	padding-right: 10px;
+	padding-top: 7px;
+	vertical-align: top;	
+}
+
+#searchResults .sectionTable .tableCell {
+	border-left: 1px solid #dddddd;
+	padding-left: 5px;	
+	padding-right: 10px;
+	padding-top: 7px;
+	vertical-align: top;
+}
+
+
+
+/* ====================================================================================== *\
+   Search Page - Search Filters
+\* ====================================================================================== */
+
+#searchFilters {	
+	width: 215px;
+	float: right;
+	padding-top: 15px;	
+}
+
+#searchFilters .filtesTitle {
+	font-size: 14px;
+	letter-spacing: 1px;
+	padding-bottom: 5px;	
+}
+
+#searchFilters #filtersContainer {	
+	background-color: #f8f3e5;
+	padding-bottom: 6px;
+}
+
+#searchFilters #filtersContainer .relative {
+	position: relative;
+}
+
+#searchFilters #filtersContainer .filterHeader {
+	display: block;
+	color: #000000;
+	font-size: 14px;
+	height: 24px;
+	letter-spacing: 1px;
+	padding-left: 5px;
+	padding-top: 3px;
+	background-image: url(../images/filter_header.1b1f99147c3f236c.png);
+	background-repeat: repeat-x;
+	border-bottom: 1px solid #b6ac92;
+}
+
+#searchFilters #filtersContainer .filterOptions {
+	background-color: #fbfbf9;
+	margin-left: 4px;
+	margin-right: 4px;
+	margin-bottom: 4px;
+}
+
+#searchFilters #filtersContainer .filterOptions .wrapper {
+	padding: 10px;
+}
+
+#searchFilters #filtersContainer .filterUpdate {
+	padding: 8px 10px;
+	font-size: 14px;
+	font-weight: bold;
+	position: absolute;
+	top: 0px;
+}
+
+#searchFilters #filtersContainer .filterCell {
+	cursor: pointer;
+}
+
+#searchFilters #filtersContainer #filterSubmit {
+	font-weight: bold;
+	background-color: #F8F3E5;
+	padding: 3px;
+	border: 1px solid #CFBE90;
+	margin: 4px;
+}
+
+/* ====================================================================================== *\
+   Search Page - Pagination Controls
+\* ====================================================================================== */
+
+#pagination {
+	width: 960px;
+	background-color: #f8f3e5;
+	border-bottom: 2px solid #7a0000;
+	border-top: 1px solid #d8b9b9;
+	clear: both;
+	text-align: center;	
+	padding-bottom: 3px;
+}
+
+#pagination a {
+	color: #7a0000;
+	font-size: 12px;
+	padding: 3px 5px;
+}
+
+#pagination .currentPage {
+	font-size: 16px;
+	padding: 3px 5px;
+}
+
+
+/* ====================================================================================== *\
+   Print Page
+\* ====================================================================================== */
+
+#printTopControls {
+	margin-top: 20px;
+}
+
+#printTopControls td {
+	background-color: #f8f3e5;
+}
+
+#printTopControls td.left {
+	background-image: url(../images/rounded_corners_left.5770c131a100cb62.png);
+	height: 57px;
+	width: 10px;
+}
+
+#printTopControls td.right {
+	background-image: url(../images/rounded_corners_right.4da35e6a7729230c.png);
+	height: 57px;
+	width: 10px;
+}
+
+#printTopControls td.contentHeader {
+	padding-left: 20px;
+	padding: 0px;
+	text-align: right;
+	width: 145px;
+}
+
+#printTopControls td.printInput {
+	padding-left: 20px;
+	width: 20px;
+}
+
+#printTopControls td.printContent {
+	width: 80px;
+	cursor: pointer;
+}
+
+#printTopControls td.spacer {
+	width: 570px;
+}
+
+#printTopControls .vertBar {
+	background-color: #cfbe90;
+	width: 3px;
+	height: 40px;
+	margin: 0px 10px;
+}
+
+#printTopControls #filterSubmit {
+	font-weight: bold;
+	background-color: #F8F3E5;
+	padding: 3px;
+	border: 1px solid #CFBE90;
+}
+
+#previewContainer {
+	margin-top: 20px;
+	width: 960px;
+	background-image: url(../images/preview_tile.c25abd1a70c1d48f.png);
+	background-repeat: repeat;
+	padding-bottom: 20px;
+}
+
+#pagePreview {
+	background-color: #ffffff;
+	border: 1px solid #cccccc;	
+	width: 725px;
+	padding-left: 15px;
+	padding-right: 15px;
+	padding-bottom: 10px;
+}
+
+#pagePreview #pageHeader {
+	font-size: 13px;
+	color: #666666;
+	padding-top: 16px;
+	margin-left: 15px;
+	margin-right: 15px;
+	border-bottom: 1px solid #dddddd;
+}
+
+#pagePreview #pageHeader #numResults {
+	text-align: right;
+}
+
+#pagePreview #printSearchResults .searchResult {
+	margin: 0px 15px;	
+	padding-top: 10px;
+	padding-bottom: 15px;	
+	padding-left: 5px;
+	border-bottom: 1px solid #dddddd;
+}
+
+#pagePreview #printSearchResults .courseInfo {
+	margin: 0px 5px;
+}
+
+#pagePreview #printSearchResults .courseNumber {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+#pagePreview #printSearchResults .courseTitle {
+	font-size: 16px;
+}
+
+#pagePreview #printSearchResults .courseDescription {
+	padding-top: 3px;
+	font-size: 12px;
+}
+
+#pagePreview #printSearchResults .courseAttributes {
+	padding-left: 5px;
+	padding-top: 3px;
+}
+
+#printSearchResults .sectionInfo {
+	padding-left: 5px;	
+	padding-top: 10px;
+}
+
+#printSearchResults .sectionContainer {
+	background-color: #f8f3e5;
+	font-size: 14px;
+	font-weight: bold;
+	padding: 7px;
+}
+
+#printSearchResults .sectionContainerTerm {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+#printSearchResults .sectionDetails {
+	background-color: #ffffff;
+	font-weight: normal;
+	font-size: 12px;
+	padding: 5px;
+	line-height: 20px;
+	margin-bottom: 7px;
+	list-style: none;
+}
+
+#printSearchResults .boldText {
+	font-weight: bold;	
+}
+
+#pagePreview #pageFooter {
+	padding-top: 75px;
+	color: #666666;
+	text-align: center;
+}
+
+/* ====================================================================================== *\
+   About Page
+\* ====================================================================================== */
+
+#aboutpage #mainContent {
+	width: 950px;
+}
+
+#aboutpage #title {
+	font-size: 16px;
+	font-weight: bold;
+	padding-bottom: 10px;
+	padding-top: 20px;
+}
+
+#aboutpage .sectionHeader {
+	font-size: 14px;
+	font-weight: bold;
+	padding-top: 10px;
+	padding-bottom: 5px;
+}
+
+#aboutpage .sectionContent {
+	font-size: 13px;
+	padding-bottom: 8px;
+}
+
+/* ====================================================================================== *\
+   @ media print
+\* ====================================================================================== */
+
+@media print {
+  * { text-align: left; margin: 0; }
+  #footerStripe { display: none; }
+  #headerStripe { display: none; }
+  #topControls { display: none; }
+  #printTopControls { display: none; }
+  #pagePreview { border: none; padding: 0; width: 930px; }
+  #previewContainer { background: none; }
+  #pagePreview #printSearchResults .searchResult { padding: 5px 0; }
+  #printSearchResults .sectionInfo { padding: 0 0 0 20px; }
+  #printSearchResults .sectionDetails { padding: 5px 0 0; margin-bottom: 0; }
+}
+
+
+
+/* ====================================================================================== *\
+   My Profile
+\* ====================================================================================== */
+
+.myprofileInterests li
+{
+	padding: 3px;
+}
+

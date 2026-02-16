@@ -1,0 +1,5 @@
+- Do not rewrite existing modules unless explicitly instructed.
+- All changes must preserve existing tests.
+- Prefer additive changes over refactors.
+- Do not modify legacy/ without permission.
+- Maintain deterministic behavior.
