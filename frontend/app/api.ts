@@ -265,6 +265,40 @@ export function postExamGenerate(bookId: string, params?: { exam_size?: number; 
   return post(`/books/${bookId}/study/exam/generate`, params ?? {});
 }
 
+// ---- Outline & Scoped Summary ----
+
+export interface OutlineItem {
+  id: string;
+  title: string;
+  level: number;
+  start_page: number;
+  end_page: number;
+  parent_id: string | null;
+}
+
+export interface OutlineResponse {
+  outline_id: string;
+  items: OutlineItem[];
+}
+
+export interface ScopedSummaryResponse {
+  summary_markdown: string;
+  bullets: string[];
+  citations: string[];
+  key_terms: string[];
+}
+
+export function getBookOutline(bookId: string): Promise<OutlineResponse> {
+  return request(`/books/${bookId}/outline`);
+}
+
+export function postScopedSummary(
+  bookId: string,
+  params: { outline_id: string; scope: { item_ids: string[] }; options?: { bullets_target?: number; max_pages?: number } }
+): Promise<ScopedSummaryResponse> {
+  return post(`/books/${bookId}/summaries`, params);
+}
+
 export function getCatalog(): Promise<CatalogResponse> {
   return request("/catalog");
 }

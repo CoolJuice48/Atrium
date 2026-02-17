@@ -20,6 +20,10 @@ from server.config import Settings
 from server.dependencies import get_card_store, get_graph, get_runtime, get_settings
 from server.schemas import (
     BooksResponse,
+    OutlineResponse,
+    OutlineItemSchema,
+    ScopedSummaryResponse,
+    SummaryScopeRequest,
     LoginRequest,
     PlanGenerateRequest,
     PlanGenerateResponse,
@@ -742,6 +746,78 @@ def books_patch_metadata(
     if not ok:
         raise HTTPException(status_code=404, detail="Book not found or not owned by you")
     return {"ok": True}
+
+
+# ---- Outline & Scoped Summary ----
+
+@app.get("/books/{book_id}/outline", response_model=OutlineResponse)
+def books_get_outline(
+    book_id: str,
+    settings: Settings = Depends(get_settings),
+):
+    """Get hierarchical outline for scope selection. Builds from chunks if not cached."""
+    from server.outline import get_or_build_outline
+    from server.library import load_library, verify_library_cached
+
+    index_root = Path(settings.index_root).resolve()
+    book_dir = index_root / "books" / book_id
+    if not book_dir.exists():
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    lib = load_library(index_root)
+    if lib:
+        _, _, valid_ids = verify_library_cached(index_root, lib)
+        if book_id not in valid_ids:
+            raise HTTPException(status_code=404, detail="Book not found or not ready")
+
+    try:
+        outline_id, items = get_or_build_outline(book_dir)
+        return {
+            "outline_id": outline_id,
+            "items": [OutlineItemSchema(**it) for it in items],
+        }
+    except Exception as e:
+        logger.exception("Outline build failed for book %s", book_id)
+        raise HTTPException(status_code=500, detail="Could not build outline")
+
+
+@app.post("/books/{book_id}/summaries", response_model=ScopedSummaryResponse)
+def books_post_summaries(
+    book_id: str,
+    body: SummaryScopeRequest,
+    settings: Settings = Depends(get_settings),
+):
+    """Generate scoped summary for selected chapters/sections."""
+    from server.services import summary_service
+
+    index_root = Path(settings.index_root).resolve()
+    item_ids = body.scope.get("item_ids") or []
+    opts = body.options or {}
+    bullets_target = opts.get("bullets_target", 10)
+    max_pages = opts.get("max_pages", 80)
+
+    try:
+        result = summary_service.generate_scoped_summary(
+            index_root,
+            book_id,
+            body.outline_id,
+            item_ids,
+            bullets_target=bullets_target,
+            max_pages=max_pages,
+        )
+        return result
+    except ValueError as e:
+        msg = str(e)
+        if "Outline has changed" in msg:
+            raise HTTPException(status_code=409, detail=msg)
+        if "No sections selected" in msg or "No content found" in msg:
+            raise HTTPException(status_code=400, detail=msg)
+        if "too large" in msg.lower():
+            raise HTTPException(status_code=400, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        logger.exception("Scoped summary failed for book %s", book_id)
+        raise HTTPException(status_code=500, detail="Summary generation failed")
 
 
 # ---- Catalog (lazy: loads index on first request) ----

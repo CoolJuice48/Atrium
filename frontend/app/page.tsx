@@ -45,6 +45,7 @@ import {
   type ExamQuestion,
 } from "./api";
 import { SyllabusUploadPanel } from "./SyllabusUploadPanel";
+import { ScopedSummaryPanel } from "./ScopedSummaryPanel";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
@@ -276,6 +277,12 @@ function HomeContent() {
               triggerGenerate={triggerExamForBookId}
               onTriggerConsumed={() => setTriggerExamForBookId(null)}
             />
+            {selectedBookId && (
+              <ScopedSummaryPanel
+                bookId={selectedBookId}
+                bookTitle={books.find((b) => b.book_id === selectedBookId)?.title ?? "Book"}
+              />
+            )}
             <StudyArtifactsPanel
               selectedBookId={selectedBookId}
               onSelectBook={setSelectedBookId}

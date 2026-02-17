@@ -83,6 +83,19 @@ Atrium Packs are modular curriculum bundles (open-licensed only). To host packs 
 
 See [docs/packs/SCHEMA.md](docs/packs/SCHEMA.md) for pack manifest format.
 
+## Scoped summaries
+
+To avoid weak "entire textbook" summaries, use **Scoped Summary**:
+
+1. Select a book in the Ask panel
+2. In the **Scoped Summary** panel, choose chapters or sections via the outline tree
+3. Click **Generate summary** – only the selected scope is summarized
+
+**API** (see also http://localhost:8000/docs):
+
+- `GET /books/{book_id}/outline` – Returns `{ outline_id, items: [{ id, title, level, start_page, end_page, parent_id }] }`
+- `POST /books/{book_id}/summaries` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { bullets_target, max_pages } }`. Returns `{ summary_markdown, bullets, citations, key_terms }`. Use `outline_id` from the outline response; if the outline has changed (e.g. after re-ingestion), the API returns 409.
+
 ## Docs
 
 - [Usage](docs/USAGE.md) – End-user guide

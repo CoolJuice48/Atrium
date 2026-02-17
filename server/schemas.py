@@ -194,6 +194,35 @@ class IndexBuildResponse(BaseModel):
     timings: Optional[Dict[str, Any]] = None
 
 
+# ---- Outline & Scoped Summary ----
+
+class OutlineItemSchema(BaseModel):
+    id: str
+    title: str
+    level: int
+    start_page: int
+    end_page: int
+    parent_id: Optional[str] = None
+
+
+class OutlineResponse(BaseModel):
+    outline_id: str
+    items: List[OutlineItemSchema]
+
+
+class SummaryScopeRequest(BaseModel):
+    outline_id: str
+    scope: Dict[str, Any] = Field(default_factory=dict)  # { item_ids: [...] }
+    options: Optional[Dict[str, Any]] = None  # { bullets_target, max_pages }
+
+
+class ScopedSummaryResponse(BaseModel):
+    summary_markdown: str
+    bullets: List[str]
+    citations: List[str]
+    key_terms: List[str]
+
+
 # ---- Study Artifacts (per-book) ----
 
 class BookStudyInfo(BaseModel):
