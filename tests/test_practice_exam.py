@@ -9,7 +9,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from server.outline import build_outline, save_outline
 from server.services.exam_candidates import build_candidate_pool
 from server.services.exam_stems import validate_definition_term, validate_question_stem
-from server.services.exam_generation import generate_exam_questions
+from server.services.exam_generation import (
+    extract_definition_pairs,
+    generate_exam_questions,
+)
 from server.services.practice_exam_service import generate_scoped_exam
 
 
@@ -191,6 +194,66 @@ def test_scope_caps_return_413():
             app.dependency_overrides.clear()
 
 
+def test_definition_generator_rejects_determiner_or_discourse_terms():
+    """Terms like 'Any zero in c', 'then high angular velocity' never appear."""
+    assert not validate_definition_term("Any zero in c")
+    assert not validate_definition_term("then high angular velocity")
+    assert not validate_definition_term("this method")
+    assert not validate_definition_term("thus the result")
+    assert not validate_definition_term("however the case")
+    pairs = extract_definition_pairs("Any zero in c is defined as a root of the polynomial.")
+    assert not pairs or not validate_definition_term(pairs[0][0])
+    pairs = extract_definition_pairs("Then high angular velocity is defined as rotation above 10 rad/s.")
+    assert not pairs or not validate_definition_term(pairs[0][0])
+
+
+def test_definition_generator_requires_explicit_patterns_or_sentence_initial():
+    """Only sentence-initial definition patterns are accepted."""
+    pairs = extract_definition_pairs("Machine learning is defined as a subset of artificial intelligence.")
+    assert len(pairs) == 1
+    assert pairs[0][0] == "Machine learning"
+    pairs = extract_definition_pairs("In this context, gradient descent refers to the optimization algorithm.")
+    assert not pairs
+
+
+def test_no_mid_clause_definition_extraction():
+    """No extraction from mid-sentence."""
+    pairs = extract_definition_pairs("The algorithm then high angular velocity is used for simulation.")
+    assert not pairs
+    pairs = extract_definition_pairs("We see that any zero in c can be computed.")
+    assert not pairs
+
+
+def test_regression_no_garbage_stems():
+    """Hard assert no stems start with bad prefixes."""
+    bad_prefixes = ("What is Any", "What is then", "What is This", "What is because")
+    chunks = [
+        {"text": "Any zero in c is defined as a root. Then high angular velocity is defined as rotation.", "metadata": {"page_start": 1, "page_end": 2, "chunk_id": "c1"}},
+        {"text": "This is defined as the main method. Because it works well.", "metadata": {"page_start": 3, "page_end": 4, "chunk_id": "c2"}},
+    ]
+    pool = build_candidate_pool(chunks)
+    questions = generate_exam_questions(pool, distribution={"definition": 10}, total=10)
+    for q in questions:
+        if q.q_type == "definition":
+            for bad in bad_prefixes:
+                assert not q.prompt.startswith(bad), f"Bad stem: {q.prompt}"
+
+
+def test_fill_blank_does_not_break_passive_voice():
+    """Blanks do not create '______ approximated' or 'is ______ used' artifacts."""
+    chunks = [
+        {"text": "The loss function is approximated by gradient descent in each iteration.", "metadata": {"page_start": 1, "page_end": 2, "chunk_id": "c1"}},
+        {"text": "The loss function is approximated by gradient descent in each iteration.", "metadata": {"page_start": 1, "page_end": 2, "chunk_id": "c1"}},
+    ]
+    pool = build_candidate_pool(chunks)
+    questions = generate_exam_questions(pool, distribution={"fib": 5}, total=5)
+    for q in questions:
+        if q.q_type == "fib":
+            assert "______ approximated" not in q.prompt
+            assert "is ______ used" not in q.prompt
+            assert "______ used" not in q.prompt or "is ______" not in q.prompt
+
+
 def test_exam_generation_reallocates_when_insufficient_candidates():
     """When one type has few candidates, others are used; no garbage output."""
     chunks = [
@@ -199,7 +262,7 @@ def test_exam_generation_reallocates_when_insufficient_candidates():
             "metadata": {"page_start": 1, "page_end": 2, "chunk_id": "c1"},
         },
         {
-            "text": "Backpropagation is defined as the algorithm for training neural networks by gradient descent.",
+            "text": "Gradient descent algorithm is defined as the method for training neural networks by backpropagation.",
             "metadata": {"page_start": 3, "page_end": 4, "chunk_id": "c2"},
         },
     ]

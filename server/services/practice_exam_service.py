@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from server.outline import (
     filter_chunks_by_page_ranges,
@@ -53,6 +53,8 @@ def generate_scoped_exam(
     max_pages: int = DEFAULT_MAX_PAGES,
     max_chunks: int = DEFAULT_MAX_CHUNKS,
     distribution: Optional[Dict[str, int]] = None,
+    use_local_llm: bool = False,
+    settings: Any = None,
 ) -> Dict[str, Any]:
     """
     Generate a scoped practice exam. Requires scope selection.
@@ -108,6 +110,15 @@ def generate_scoped_exam(
         )
 
     questions = generate_exam_questions(pool, distribution=distribution, total=total_questions)
+    if use_local_llm and settings:
+        from server.services.local_llm.exam_polish import polish_exam_questions_sync
+        from server.services.local_llm.provider import get_provider
+        provider = get_provider(settings)
+        if provider:
+            try:
+                questions = polish_exam_questions_sync(questions, provider, settings)
+            except Exception:
+                pass
     if not questions:
         raise ValueError(
             "Could not generate enough questions from the selected scope. "

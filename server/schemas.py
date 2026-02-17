@@ -286,7 +286,15 @@ class ExamGenerateRequest(BaseModel):
 class PracticeExamScopeRequest(BaseModel):
     outline_id: str
     scope: Dict[str, Any] = Field(default_factory=dict)  # { item_ids: [...] }
-    options: Optional[Dict[str, Any]] = None  # { total_questions, max_pages, distribution }
+    options: Optional[Dict[str, Any]] = None  # { total_questions, max_pages, distribution, use_local_llm }
+
+
+class LocalLLMSettingsResponse(BaseModel):
+    enabled: bool
+    provider: str
+    model: str
+    status: str  # ok | unavailable
+    message: Optional[str] = None
 
 
 class PracticeExamQuestion(BaseModel):

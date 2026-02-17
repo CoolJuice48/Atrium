@@ -57,6 +57,7 @@ from server.schemas import (
     ExamGenerateResponse,
     PracticeExamScopeRequest,
     PracticeExamResponse,
+    LocalLLMSettingsResponse,
 )
 from server.services import (
     auth_service,
@@ -822,6 +823,82 @@ def books_post_summaries(
         raise HTTPException(status_code=500, detail="Summary generation failed")
 
 
+@app.get("/settings/local-llm", response_model=LocalLLMSettingsResponse)
+def get_local_llm_settings(settings: Settings = Depends(get_settings)):
+    """Get local LLM status. Used by UI to show availability."""
+    from server.services.local_llm.provider import get_provider
+    enabled = getattr(settings, "local_llm_enabled", False)
+    provider = get_provider(settings) if enabled else None
+    if not enabled:
+        return {
+            "enabled": False,
+            "provider": getattr(settings, "local_llm_provider", "ollama"),
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "unavailable",
+            "message": "Local LLM disabled. Set LOCAL_LLM_ENABLED=1 to enable.",
+        }
+    if provider is None:
+        return {
+            "enabled": True,
+            "provider": getattr(settings, "local_llm_provider", "ollama"),
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "unavailable",
+            "message": "Provider not configured.",
+        }
+    import asyncio
+    try:
+        ok, msg = asyncio.run(provider.test_connection())
+        return {
+            "enabled": True,
+            "provider": provider.name,
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "ok" if ok else "unavailable",
+            "message": None if ok else msg,
+        }
+    except Exception as e:
+        return {
+            "enabled": True,
+            "provider": provider.name,
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "unavailable",
+            "message": str(e),
+        }
+
+
+@app.post("/settings/local-llm/test", response_model=LocalLLMSettingsResponse)
+def test_local_llm(settings: Settings = Depends(get_settings)):
+    """Test local model with a tiny prompt. No user data."""
+    from server.services.local_llm.provider import get_provider
+    enabled = getattr(settings, "local_llm_enabled", False)
+    provider = get_provider(settings) if enabled else None
+    if not enabled or provider is None:
+        return {
+            "enabled": enabled,
+            "provider": getattr(settings, "local_llm_provider", "ollama"),
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "unavailable",
+            "message": "Local LLM not enabled or configured.",
+        }
+    import asyncio
+    try:
+        ok, msg = asyncio.run(provider.test_connection())
+        return {
+            "enabled": True,
+            "provider": provider.name,
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "ok" if ok else "unavailable",
+            "message": None if ok else msg,
+        }
+    except Exception as e:
+        return {
+            "enabled": True,
+            "provider": provider.name,
+            "model": getattr(settings, "local_llm_model", "qwen2.5:7b-instruct"),
+            "status": "unavailable",
+            "message": str(e),
+        }
+
+
 @app.post("/books/{book_id}/practice-exams", response_model=PracticeExamResponse)
 def books_post_practice_exams(
     book_id: str,
@@ -838,6 +915,7 @@ def books_post_practice_exams(
     max_pages = opts.get("max_pages", 40)
     max_chunks = opts.get("max_chunks", 150)
     distribution = opts.get("distribution")
+    use_local_llm = opts.get("use_local_llm", False) is True
 
     try:
         result = practice_exam_service.generate_scoped_exam(
@@ -849,6 +927,8 @@ def books_post_practice_exams(
             max_pages=max_pages,
             max_chunks=max_chunks,
             distribution=distribution,
+            use_local_llm=use_local_llm,
+            settings=settings,
         )
         return result
     except ValueError as e:

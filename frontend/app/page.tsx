@@ -16,6 +16,8 @@ import {
   postExamGenerate,
   postScopedPracticeExam,
   getBookOutline,
+  getLocalLLMSettings,
+  testLocalLLM,
   postQuery,
   postCardsFromLastAnswer,
   postPlan,
@@ -1388,6 +1390,8 @@ function ExamPanel({
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [grades, setGrades] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
+  const [useLocalLLM, setUseLocalLLM] = useState(false);
+  const [localLLMStatus, setLocalLLMStatus] = useState<{ enabled: boolean; status: string; message?: string } | null>(null);
 
   const loadBooks = useCallback(async () => {
     setLoadingBooks(true);
@@ -1427,6 +1431,12 @@ function ExamPanel({
     if (selectedBookId) fetchOutline();
     else setOutline(null);
   }, [selectedBookId, fetchOutline]);
+
+  useEffect(() => {
+    getLocalLLMSettings()
+      .then((r) => setLocalLLMStatus({ enabled: r.enabled, status: r.status, message: r.message }))
+      .catch(() => setLocalLLMStatus({ enabled: false, status: "unavailable", message: "Failed to load" }));
+  }, []);
 
   useEffect(() => {
     if (!triggerGenerate) return;
@@ -1482,7 +1492,7 @@ function ExamPanel({
       const res = await postScopedPracticeExam(selectedBookId, {
         outline_id: outline.outline_id,
         scope: { item_ids: Array.from(selectedIds) },
-        options: { total_questions: 20, max_pages: 40 },
+        options: { total_questions: 20, max_pages: 40, use_local_llm: useLocalLLM },
       });
       setExam(res);
     } catch (e) {
@@ -1560,6 +1570,18 @@ function ExamPanel({
                 {outline.items.filter((i) => !i.parent_id).map((item) => renderOutlineItem(item, 0))}
               </div>
               {getScopePill() && <p style={{ fontSize: "0.85rem", marginBottom: 8 }}><strong>Scope:</strong> {getScopePill()}</p>}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: localLLMStatus?.status === "ok" ? "pointer" : "not-allowed" }} title={localLLMStatus?.message ?? "Runs on your machine via Ollama. Improves phrasing; does not change content."}>
+                  <input type="checkbox" checked={useLocalLLM} onChange={(e) => setUseLocalLLM(e.target.checked)} disabled={localLLMStatus?.status !== "ok"} />
+                  <span style={{ fontSize: "0.9rem" }}>Use local model (optional)</span>
+                </label>
+                {localLLMStatus?.status === "unavailable" && localLLMStatus?.enabled && (
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Ollama not detected</span>
+                )}
+                {localLLMStatus?.status === "ok" && (
+                  <button type="button" className="secondary" style={{ fontSize: "0.8rem" }} onClick={() => testLocalLLM().then((r) => setLocalLLMStatus({ enabled: r.enabled, status: r.status, message: r.message }))}>Test local model</button>
+                )}
+              </div>
               <button className="primary" onClick={handleGenerate} disabled={generating || selectedIds.size === 0}>
                 {generating ? "Generating…" : "Generate practice exam (20)"}
               </button>

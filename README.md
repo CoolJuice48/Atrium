@@ -95,7 +95,26 @@ To avoid weak "entire textbook" summaries, use **Scoped Summary**:
 
 - `GET /books/{book_id}/outline` – Returns `{ outline_id, items: [{ id, title, level, start_page, end_page, parent_id }] }`
 - `POST /books/{book_id}/summaries` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { bullets_target, max_pages } }`. Returns `{ summary_markdown, bullets, citations, key_terms }`. Use `outline_id` from the outline response; if the outline has changed (e.g. after re-ingestion), the API returns 409.
-- `POST /books/{book_id}/practice-exams` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { total_questions, max_pages } }`. Returns scoped exam with definition, fill-in-the-blank, true/false, short answer, and list questions. Requires scope selection; returns 400 if none selected, 409 if outline stale, 413 if scope too large.
+- `POST /books/{book_id}/practice-exams` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { total_questions, max_pages, use_local_llm } }`. Returns scoped exam with definition, fill-in-the-blank, true/false, short answer, and list questions. Requires scope selection; returns 400 if none selected, 409 if outline stale, 413 if scope too large.
+
+## Local Model Assist (optional)
+
+Practice exams can optionally use a **local LLM** (Ollama) to polish definition and fill-in-the-blank questions. No paid APIs; runs on your machine.
+
+1. **Install Ollama**: https://ollama.ai
+2. **Pull a model**:
+   ```bash
+   ollama pull qwen2.5:7b-instruct
+   ```
+   Alternative: `ollama pull llama3.1:8b-instruct`
+3. **Enable in Atrium**:
+   ```bash
+   LOCAL_LLM_ENABLED=1 make run
+   ```
+4. In the Practice Exam panel, check **Use local model (optional)** before generating.
+5. Click **Test local model** to verify Ollama is detected.
+
+Atrium does not start or manage Ollama; it only connects to an already-running instance. If the model is unavailable, exams fall back to the deterministic pipeline.
 
 ## Docs
 

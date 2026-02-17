@@ -30,6 +30,21 @@ class Settings:
     max_upload_size_mb: float = 80.0
     upload_rate_limit_per_user: int = 5  # max concurrent + recent uploads per user
 
+    # Local LLM (Ollama / llama.cpp) - optional polish for practice exams
+    local_llm_enabled: bool = False
+    local_llm_provider: str = "ollama"
+    local_llm_model: str = "qwen2.5:7b-instruct"
+    local_llm_base_url: str = "http://localhost:11434"
+    local_llm_timeout_s: int = 20
+    local_llm_max_retries: int = 2
+    local_llm_max_input_chars: int = 800
+    local_llm_max_output_chars: int = 500
+    local_llm_temperature: float = 0.2
+    local_llm_top_p: float = 0.9
+    local_llm_seed: int = 42
+    local_llm_concurrency: int = 2
+    local_llm_strict_json: bool = True
+
     def __post_init__(self):
         project_root = Path(__file__).resolve().parent.parent
 
@@ -85,3 +100,18 @@ class Settings:
         if self.uploads_root is None:
             self.uploads_root = project_root / "uploads"
         self.uploads_root = Path(self.uploads_root)
+
+        # Local LLM env overrides
+        if os.environ.get("LOCAL_LLM_ENABLED", "").lower() in ("1", "true", "yes"):
+            self.local_llm_enabled = True
+        if os.environ.get("LOCAL_LLM_PROVIDER"):
+            self.local_llm_provider = os.environ["LOCAL_LLM_PROVIDER"]
+        if os.environ.get("LOCAL_LLM_MODEL"):
+            self.local_llm_model = os.environ["LOCAL_LLM_MODEL"]
+        if os.environ.get("LOCAL_LLM_BASE_URL"):
+            self.local_llm_base_url = os.environ["LOCAL_LLM_BASE_URL"]
+        try:
+            if v := os.environ.get("LOCAL_LLM_TIMEOUT_S"):
+                self.local_llm_timeout_s = int(v)
+        except ValueError:
+            pass

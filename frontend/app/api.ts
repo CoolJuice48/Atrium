@@ -314,12 +314,28 @@ export interface PracticeExamResponse {
   citations: { chunk_id: string; pages: string }[];
 }
 
+export interface LocalLLMSettingsResponse {
+  enabled: boolean;
+  provider: string;
+  model: string;
+  status: "ok" | "unavailable";
+  message?: string;
+}
+
+export function getLocalLLMSettings(): Promise<LocalLLMSettingsResponse> {
+  return request("/settings/local-llm");
+}
+
+export function testLocalLLM(): Promise<LocalLLMSettingsResponse> {
+  return post("/settings/local-llm/test", {});
+}
+
 export function postScopedPracticeExam(
   bookId: string,
   params: {
     outline_id: string;
     scope: { item_ids: string[] };
-    options?: { total_questions?: number; max_pages?: number };
+    options?: { total_questions?: number; max_pages?: number; use_local_llm?: boolean };
   }
 ): Promise<PracticeExamResponse> {
   return post(`/books/${bookId}/practice-exams`, params);
