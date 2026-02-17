@@ -312,6 +312,40 @@ def _extract_cloze_from_definition(term: str, definition: str) -> Optional[Tuple
     return (cloze_prompt, term)
 
 
+def _cards_from_registry(
+    definition_registry: List[dict],
+    book_name: str,
+    tags: List[str],
+    max_count: int,
+) -> List[Card]:
+    """Create definition cards from DefinitionRegistry. No duplicate terms."""
+    cards: List[Card] = []
+    seen_terms: set = set()
+    for rec in definition_registry:
+        if len(cards) >= max_count:
+            break
+        term = rec.get('term', '')
+        defn = rec.get('definition', '')
+        chunk_id = rec.get('chunk_id', '')
+        pages = rec.get('pages', '')
+        if not term or not defn or term.lower() in seen_terms:
+            continue
+        seen_terms.add(term.lower())
+        citation = Citation(chunk_id=chunk_id, chapter='', section='', pages=pages)
+        prompt = f"What is {term}?"
+        card_id = make_structure_card_id(CardType.DEFINITION.value, prompt, chunk_id, term)
+        cards.append(Card(
+            card_id=card_id,
+            book_name=book_name,
+            tags=tags,
+            prompt=prompt,
+            answer=defn,
+            card_type=CardType.DEFINITION.value,
+            citations=[citation],
+        ))
+    return cards
+
+
 def _cards_from_chunk(
     chunk: Dict,
     blueprint: Dict[str, int],
@@ -457,10 +491,12 @@ def generate_cards_from_chunks(
     max_cards: int = 20,
     blueprint: Optional[Dict] = None,
     seed: Optional[int] = None,
+    definition_registry: Optional[List[dict]] = None,
 ) -> List[Card]:
     """
     Generate cards from chunks alone (no question/answer_dict).
     Deterministic given same inputs and seed.
+    When definition_registry is provided, definition cards draw from it (no duplicates).
 
     Accepts the exact same retrieved_chunks structure from both global packs
     and user uploads; no branching based on origin.
@@ -492,6 +528,16 @@ def generate_cards_from_chunks(
     all_cards: List[Card] = []
     seen_ids: set = set()
     consumed: Dict[str, int] = {k: 0 for k in bp}
+    if definition_registry:
+        def_max = bp.get(CardType.DEFINITION.value, 0)
+        reg_cards = _cards_from_registry(
+            definition_registry, book_name, tags, max_count=def_max
+        )
+        for c in reg_cards:
+            if c.card_id not in seen_ids:
+                all_cards.append(c)
+                seen_ids.add(c.card_id)
+                consumed[CardType.DEFINITION.value] = consumed.get(CardType.DEFINITION.value, 0) + 1
     chunks_shuffled = retrieved_chunks.copy()
     rng.shuffle(chunks_shuffled)
 

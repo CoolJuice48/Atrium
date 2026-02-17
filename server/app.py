@@ -932,6 +932,10 @@ def books_post_practice_exams(
         )
         return result
     except ValueError as e:
+        from server.services.quality_gates import InsufficientQualityError
+        if isinstance(e, InsufficientQualityError):
+            detail = {"message": str(e), **(e.detail or {})}
+            raise HTTPException(status_code=422, detail=detail)
         msg = str(e)
         if "Outline has changed" in msg:
             raise HTTPException(status_code=409, detail=msg)
@@ -942,7 +946,7 @@ def books_post_practice_exams(
         if "Too few quality" in msg or "Could not generate enough" in msg:
             raise HTTPException(status_code=400, detail=msg)
         raise HTTPException(status_code=400, detail=msg)
-    except Exception as e:
+    except Exception as e:  # noqa: B012
         logger.exception("Scoped practice exam failed for book %s", book_id)
         raise HTTPException(status_code=500, detail="Practice exam generation failed")
 

@@ -90,13 +90,17 @@ def generate_scoped_summary(
         }
         chunk_dicts.append({"text": c.get("text", ""), "metadata": meta})
 
+    from server.services.concepts import get_section_title_terms_for_scope
     from server.services.summary_compose import compose_summary_from_chunks
+
+    section_title_terms = get_section_title_terms_for_scope(items, item_ids, chunk_dicts)
 
     result = compose_summary_from_chunks(
         chunk_dicts,
         "Summarize the main ideas and key concepts.",
         max_chunks=min(12, len(chunk_dicts)),
         max_bullets=bullets_target,
+        section_title_terms=section_title_terms,
     )
 
     return {

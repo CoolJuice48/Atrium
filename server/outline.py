@@ -3,6 +3,7 @@ Book outline: hierarchical chapter/section structure for scope selection.
 
 Derives outline from chunks.jsonl (chapter_number, section_number, page_start, page_end).
 Persists as outline.json in book dir. Falls back to page-based segmentation if no structure.
+Each outline item exposes title_terms (1-3 grams from title) for centrality alignment.
 """
 
 from __future__ import annotations
@@ -12,6 +13,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+from server.services.concepts import extract_title_terms
 
 
 @dataclass
@@ -180,8 +183,9 @@ def build_outline(book_dir: Path) -> Tuple[str, List[Dict[str, Any]]]:
         items = _fallback_outline(chunks)
 
     outline_id = compute_outline_id(items)
-    dicts = [
-        {
+    dicts = []
+    for it in items:
+        d = {
             "id": it.id,
             "title": it.title,
             "level": it.level,
@@ -189,8 +193,8 @@ def build_outline(book_dir: Path) -> Tuple[str, List[Dict[str, Any]]]:
             "end_page": it.end_page,
             "parent_id": it.parent_id,
         }
-        for it in items
-    ]
+        d["title_terms"] = extract_title_terms(it.title)
+        dicts.append(d)
     return outline_id, dicts
 
 

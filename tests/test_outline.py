@@ -65,6 +65,38 @@ def test_outline_generation_produces_stable_items():
             assert "level" in it
             assert "start_page" in it
             assert "end_page" in it
+            assert "title_terms" in it
+            assert isinstance(it["title_terms"], list)
+
+
+def test_title_terms_extracted():
+    """Outline items expose title_terms (1-3 grams from title, stopword filtered)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        book_dir = Path(tmp) / "books" / "b1"
+        book_dir.mkdir(parents=True)
+        chunks = [
+            {
+                "text": "Content here.",
+                "chapter_number": "1",
+                "section_number": "1.1",
+                "section_title": "Gradient Descent Optimization",
+                "page_start": 1,
+                "page_end": 5,
+            },
+        ]
+        with open(book_dir / "chunks.jsonl", "w") as f:
+            for c in chunks:
+                f.write(json.dumps(c, ensure_ascii=False) + "\n")
+
+        outline_id, items = build_outline(book_dir)
+        assert outline_id
+        section_items = [it for it in items if it.get("level") == 2]
+        assert len(section_items) >= 1
+        sec = section_items[0]
+        terms = sec.get("title_terms", [])
+        assert isinstance(terms, list)
+        assert len(terms) >= 1
+        assert any("gradient" in t or "descent" in t or "optimization" in t for t in terms)
 
 
 def test_scope_selection_filters_chunks_correctly():

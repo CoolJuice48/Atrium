@@ -16,6 +16,11 @@ from server.outline import (
 from server.outline import _load_chunks as load_chunks
 from server.services.exam_candidates import build_candidate_pool
 from server.services.exam_generation import generate_exam_questions
+from server.services.quality_gates import (
+    InsufficientQualityError,
+    build_quality_report,
+    check_quality_gates,
+)
 
 
 DEFAULT_MAX_PAGES = 40
@@ -104,7 +109,12 @@ def generate_scoped_exam(
             f"Please select fewer sections (max {max_chunks} chunks)."
         )
 
-    pool = build_candidate_pool(filtered, max_sentences=4000)
+    from server.services.concepts import get_section_title_terms_for_scope
+
+    section_title_terms = get_section_title_terms_for_scope(items, item_ids, filtered)
+    pool = build_candidate_pool(
+        filtered, max_sentences=4000, section_title_terms=section_title_terms
+    )
     if len(pool) < 5:
         raise ValueError(
             "Too few quality sentences in the selected scope. "
@@ -115,17 +125,38 @@ def generate_scoped_exam(
         os.environ.get("DEBUG_EXAMS", "").lower() in ("1", "true", "yes")
         or os.environ.get("DEBUG_ARTIFACTS", "").lower() in ("1", "true", "yes")
     )
-    artifact_stats = None
-    if _debug:
-        from server.services.exam_stats import ExamArtifactStats
-        artifact_stats = ExamArtifactStats()
+    from server.services.exam_stats import ExamArtifactStats
+    artifact_stats = ExamArtifactStats()
 
+    dist = distribution
     questions = generate_exam_questions(
         pool,
-        distribution=distribution,
+        distribution=dist,
         total=total_questions,
         artifact_stats=artifact_stats,
     )
+
+    pass_gates, gate_msg, suggested_dist = check_quality_gates(
+        artifact_stats, len(questions), total_questions
+    )
+    if not pass_gates and suggested_dist and dist != suggested_dist:
+        retry_stats = ExamArtifactStats()
+        questions = generate_exam_questions(
+            pool,
+            distribution=suggested_dist,
+            total=total_questions,
+            artifact_stats=retry_stats,
+        )
+        pass_gates, gate_msg, _ = check_quality_gates(
+            retry_stats, len(questions), total_questions
+        )
+        if pass_gates:
+            artifact_stats = retry_stats
+    if not pass_gates:
+        raise InsufficientQualityError(
+            gate_msg or "Insufficient high-quality material; reduce scope or pick different section.",
+            detail={"suggested_distribution": suggested_dist} if suggested_dist else {},
+        )
     if use_local_llm and settings:
         from server.services.local_llm.exam_polish import polish_exam_questions_sync
         from server.services.local_llm.provider import get_provider
@@ -166,10 +197,13 @@ def generate_scoped_exam(
         questions_serialized.append(q_dict)
         all_citations.extend(q.citations)
 
-    return {
+    result: Dict[str, Any] = {
         "exam_id": exam_id,
         "scope_label": scope_label,
         "resolved_ranges": [{"start": lo, "end": hi} for lo, hi in ranges],
         "questions": questions_serialized,
         "citations": list({c["chunk_id"]: c for c in all_citations}.values()),
     }
+    if _debug and artifact_stats:
+        result["quality_report"] = build_quality_report(artifact_stats)
+    return result

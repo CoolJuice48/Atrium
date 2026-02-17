@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from server.services.exam_candidates import Candidate, CandidatePool
 
 if TYPE_CHECKING:
+    from server.services.exam_candidates import Candidate
     from server.services.exam_short_answer import ShortAnswerStats
     from server.services.exam_stats import DefinitionStats, ExamArtifactStats, FillBlankStats
 from server.services.exam_stems import (
@@ -186,6 +187,26 @@ def _validate_answer(answer: str, min_words: int = 5, max_words: int = 30) -> bo
     return min_words <= len(words) <= max_words
 
 
+def _apply_diversity_order(candidates: List["Candidate"]) -> List["Candidate"]:
+    """
+    Reorder candidates so those with unique top terms come first.
+    Deterministic: same input -> same output.
+    """
+    from server.services.exam_candidates import Candidate
+
+    seen_top_terms: set = set()
+    primary: List[Candidate] = []
+    secondary: List[Candidate] = []
+    for c in candidates:
+        tt = c.top_term or ""
+        if tt and tt not in seen_top_terms:
+            primary.append(c)
+            seen_top_terms.add(tt)
+        else:
+            secondary.append(c)
+    return primary + secondary
+
+
 def _final_sanity_check(q: ExamQuestion) -> bool:
     """Before returning: validate stem, answer length, single line (except list)."""
     if not validate_question_stem(q.prompt):
@@ -204,45 +225,43 @@ def _generate_definitions(
     count: int,
     stats: Optional["DefinitionStats"] = None,
 ) -> List[ExamQuestion]:
-    """Generate definition questions from definition-cue candidates. Sentence-initial only."""
-    def_candidates = [c for c in pool.candidates if c.score_hint >= 2]
+    """Generate definition questions from DefinitionRegistry. Only registry terms, prefer top central."""
+    from server.services.concepts import build_term_stats
+    from server.services.definitions import (
+        extract_definitions,
+        registry_terms_ordered_by_centrality,
+    )
+
+    registry = extract_definitions(pool, stats=stats)
+    if not registry:
+        return []
+    term_stats = build_term_stats([c.text for c in pool.candidates])
+    ordered = registry_terms_ordered_by_centrality(registry, term_stats)
     questions: List[ExamQuestion] = []
-    seen_terms: set = set()
-    for c in def_candidates:
+    for key in ordered:
         if len(questions) >= count:
             break
+        d = registry[key]
         if stats:
             stats.seen_sentences += 1
-        pairs = extract_definition_pairs(c.text, stats)
-        if not pairs:
-            continue
-        term, defn, _ = pairs[0]
-        term_lower = term.lower()
-        if term_lower in seen_terms:
-            continue
-        if not validate_definition_term(term):
-            if stats:
-                stats.rejected_bad_first_token += 1
-            continue
-        stem = f"What is {term}?"
+        stem = f"What is {d.term}?"
         if not validate_question_stem(stem):
             if stats:
                 stats.rejected_validation += 1
             continue
-        answer = _truncate_defn(defn)
+        answer = _truncate_defn(d.definition)
         if not _validate_answer(answer):
             if stats:
                 stats.rejected_validation += 1
             continue
-        seen_terms.add(term_lower)
         if stats:
             stats.emitted += 1
         questions.append(ExamQuestion(
             q_type="definition",
             prompt=stem,
             answer=answer,
-            citations=[_make_citation(c)],
-            source_text=c.text,
+            citations=[_make_citation(d.candidate)],
+            source_text=d.candidate.text,
         ))
     return questions
 
@@ -291,6 +310,14 @@ def _fib_blank_creates_bad_grammar(prompt: str) -> bool:
     return False
 
 
+def _supporting_terms_from_bundles(pool: CandidatePool) -> set:
+    """Collect all supporting_terms from pool bundles for FIB/cloze bias."""
+    out: set = set()
+    for b in getattr(pool, "bundles", []) or []:
+        out.update(getattr(b, "supporting_terms", []) or [])
+    return out
+
+
 def _phrase_frequency(pool: CandidatePool, min_len: int = 1, max_len: int = 3) -> Dict[str, int]:
     """Count phrase frequency. Only from sentences 12-28 words, score_hint>=1."""
     freq: Dict[str, int] = {}
@@ -326,11 +353,16 @@ def _generate_fib(
         if c.score_hint >= 1
         and 12 <= len(c.text.split()) <= 28
     ]
+    high = _apply_diversity_order(high)
     freq = _phrase_frequency(pool)
+    supporting = _supporting_terms_from_bundles(pool)
+
     def _score(phrase: str, f: int) -> int:
         s = f * 10
         if f >= 2:
             s += 50
+        if phrase.lower() in supporting:
+            s += 80
         if any(len(w) >= 5 for w in phrase.split()):
             s += 20
         if phrase != phrase.lower() and phrase[0].isupper():
@@ -409,6 +441,7 @@ def _generate_tf(pool: CandidatePool, count: int) -> List[ExamQuestion]:
         and _citation_density(c.text) < 0.05
         and 40 <= len(c.text) <= 200
     ]
+    candidates = _apply_diversity_order(candidates)
     questions: List[ExamQuestion] = []
     seen: set = set()
     for c in candidates:
@@ -450,6 +483,7 @@ def _generate_short_answer(
         if any(cue in c.text.lower() for cue in ("because", "due to", "since", "therefore", "thus"))
         and c.score_hint >= 0
     ]
+    causal = _apply_diversity_order(causal)
     questions: List[ExamQuestion] = []
     seen: set = set()
     for c in causal:
@@ -490,13 +524,46 @@ def _extract_list_items(text: str) -> Optional[List[str]]:
 
 
 def _generate_list(pool: CandidatePool, count: int) -> List[ExamQuestion]:
-    """Generate list questions from enumeration candidates."""
+    """Generate list questions from enumeration candidates and concept bundles."""
+    questions: List[ExamQuestion] = []
+    seen: set = set()
+
+    # Bundle-based: "List the key aspects of <label_term>"
+    bundles = getattr(pool, "bundles", []) or []
+    for b in bundles:
+        if len(questions) >= count:
+            break
+        terms = getattr(b, "supporting_terms", []) or []
+        if len(terms) < 2:
+            continue
+        label = getattr(b, "label_term", "")
+        if not label:
+            continue
+        stem = f"List the key aspects of {label.title()}."
+        answer = "\n".join(f"- {t}" for t in terms[:7])
+        key = (stem.lower(), answer.lower())
+        if key in seen:
+            continue
+        if not validate_question_stem(stem):
+            continue
+        sents = getattr(b, "supporting_sentences", []) or []
+        c = next((x for x in pool.candidates if x.text in sents), None)
+        c = c or (pool.candidates[0] if pool.candidates else None)
+        if not c:
+            continue
+        seen.add(key)
+        questions.append(ExamQuestion(
+            q_type="list",
+            prompt=stem,
+            answer=answer,
+            citations=[_make_citation(c)],
+        ))
+
+    # Enumeration-based fallback
     candidates = [
         c for c in pool.candidates
         if any(cue in c.text.lower() for cue in _LIST_CUES)
     ]
-    questions: List[ExamQuestion] = []
-    seen: set = set()
     for c in candidates:
         if len(questions) >= count:
             break
@@ -505,7 +572,7 @@ def _generate_list(pool: CandidatePool, count: int) -> List[ExamQuestion]:
             continue
         stem = "List the following:"
         answer = "\n".join(f"- {i}" for i in items[:7])
-        key = answer.lower()
+        key = (stem.lower(), answer.lower())
         if key in seen:
             continue
         if not validate_question_stem(stem):

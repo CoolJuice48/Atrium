@@ -5,7 +5,10 @@ No LLM, no heavyweight deps. Produces study-guide style output from retrieved ch
 """
 
 import re
-from typing import List, Tuple
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+
+if TYPE_CHECKING:
+    from server.services.bundles import ConceptBundle
 
 # Simple stopwords for keyword extraction and clustering
 _STOPWORDS = frozenset(
@@ -383,9 +386,13 @@ def compose_bulleted_summary(
     *,
     max_bullets: int = 10,
     max_candidates: int = 30,
+    sentence_centralities: Optional[dict] = None,
+    sentence_top_terms: Optional[dict] = None,
+    concept_bundles: Optional[List["ConceptBundle"]] = None,
 ) -> str:
     """
     Produce a study-guide style bullet summary from candidate sentences.
+    When sentence_centralities is provided, sort primarily by centrality.
 
     Returns markdown-style string with ### Summary (header only, no sentence appended)
     and optional ### Key terms.
@@ -401,23 +408,64 @@ def compose_bulleted_summary(
         eligible = [s for s in clean if _is_bullet_eligible(s, max_words=34)]
     candidates = eligible if eligible else clean
 
-    # Score and rank
-    scored = [(score_sentence(s, query, chunk_idx=0), s) for s in candidates]
-    scored.sort(key=lambda x: x[0], reverse=True)
-    candidates = [s for _, s in scored[:max_candidates]]
+    # Score and rank: primarily by centrality when provided, else by query overlap
+    if sentence_centralities:
+        scored = [
+            (sentence_centralities.get(s, 0.0), score_sentence(s, query, chunk_idx=0), s)
+            for s in candidates
+        ]
+        scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+        candidates = [s for _, _, s in scored[:max_candidates]]
+    else:
+        scored = [(score_sentence(s, query, chunk_idx=0), s) for s in candidates]
+        scored.sort(key=lambda x: x[0], reverse=True)
+        candidates = [s for _, s in scored[:max_candidates]]
 
-    # Cluster
+    # Use concept bundles when available: select across bundles to avoid overfitting
+    if concept_bundles:
+        from server.services.bundles import select_sentences_across_bundles
+
+        bundle_candidates = select_sentences_across_bundles(
+            concept_bundles, max_total=max_candidates, max_per_bundle=2
+        )
+        max_w = 34 if len(eligible) < 3 else 28
+        bundle_candidates = [s for s in bundle_candidates if _is_bullet_eligible(s, max_words=max_w)]
+        if bundle_candidates:
+            candidates = bundle_candidates
+
+    # Cluster (when not using bundles, or as fallback)
     clusters = cluster_sentences(candidates, max_clusters=6)
 
-    # Select 1-2 best per cluster, trim
+    # Select 1-2 best per cluster, trim. Use centrality + diversity (unique top terms first).
     bullets = []
+    used_top_terms: set = set()
     for cluster in clusters:
-        cluster_scored = [(score_sentence(s, query, chunk_idx=0), s) for s in cluster]
-        cluster_scored.sort(key=lambda x: x[0], reverse=True)
-        for _, s in cluster_scored[:2]:
+        if sentence_centralities:
+            cluster_scored = [
+                (sentence_centralities.get(s, 0.0), score_sentence(s, query, chunk_idx=0), s)
+                for s in cluster
+            ]
+            cluster_scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+            cluster_sorted = [s for _, _, s in cluster_scored]
+        else:
+            cluster_scored = [(score_sentence(s, query, chunk_idx=0), s) for s in cluster]
+            cluster_scored.sort(key=lambda x: x[0], reverse=True)
+            cluster_sorted = [s for _, s in cluster_scored]
+        if sentence_top_terms:
+            cluster_sorted = sorted(
+                cluster_sorted,
+                key=lambda s: (
+                    0 if (sentence_top_terms.get(s) or "") in used_top_terms else 1,
+                    (sentence_centralities or {}).get(s, 0.0),
+                ),
+                reverse=True,
+            )
+        for s in cluster_sorted[:2]:
             bullet = _trim_bullet(s, max_len=180)
             if bullet and bullet not in bullets:
                 bullets.append(bullet)
+                if sentence_top_terms and s in sentence_top_terms:
+                    used_top_terms.add(sentence_top_terms[s])
             if len(bullets) >= max_bullets:
                 break
         if len(bullets) >= max_bullets:
@@ -448,9 +496,11 @@ def compose_summary_from_chunks(
     *,
     max_chunks: int = 12,
     max_bullets: int = 10,
+    section_title_terms: Optional[Set[str]] = None,
 ) -> dict:
     """
     Build bulleted summary from chunk list.
+    Uses concept centrality for sentence ranking when available.
 
     Returns answer_dict with keys: answer, key_points, citations, confidence.
     """
@@ -475,7 +525,37 @@ def compose_summary_from_chunks(
         metas_by_order.append(meta)
 
     flat_sentences = [s for s, _, _ in all_sentences]
-    answer = compose_bulleted_summary(flat_sentences, query, max_bullets=max_bullets)
+    sentence_centralities = None
+    sentence_top_terms = None
+    concept_bundles = None
+    if flat_sentences:
+        from server.services.bundles import build_bundles
+        from server.services.concepts import (
+            build_term_stats,
+            extract_section_title_terms,
+            get_top_term,
+            sentence_centrality,
+        )
+        term_stats = build_term_stats(flat_sentences)
+        if section_title_terms is None:
+            section_title_terms = extract_section_title_terms(chunks[:max_chunks])
+        sentence_centralities = {
+            s: sentence_centrality(s, term_stats, section_title_terms=section_title_terms)
+            for s in flat_sentences
+        }
+        sentence_top_terms = {s: get_top_term(s, term_stats) for s in flat_sentences}
+        sentence_top_terms = {s: t for s, t in sentence_top_terms.items() if t}
+        concept_bundles = build_bundles(
+            term_stats, flat_sentences, section_title_terms=section_title_terms
+        )
+    answer = compose_bulleted_summary(
+        flat_sentences,
+        query,
+        max_bullets=max_bullets,
+        sentence_centralities=sentence_centralities,
+        sentence_top_terms=sentence_top_terms,
+        concept_bundles=concept_bundles,
+    )
 
     # Extract key_points from bullet lines (strip "- ")
     key_points = []
