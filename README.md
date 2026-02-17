@@ -95,6 +95,7 @@ To avoid weak "entire textbook" summaries, use **Scoped Summary**:
 
 - `GET /books/{book_id}/outline` – Returns `{ outline_id, items: [{ id, title, level, start_page, end_page, parent_id }] }`
 - `POST /books/{book_id}/summaries` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { bullets_target, max_pages } }`. Returns `{ summary_markdown, bullets, citations, key_terms }`. Use `outline_id` from the outline response; if the outline has changed (e.g. after re-ingestion), the API returns 409.
+- `POST /books/{book_id}/practice-exams` – Body: `{ outline_id, scope: { item_ids: [...] }, options?: { total_questions, max_pages } }`. Returns scoped exam with definition, fill-in-the-blank, true/false, short answer, and list questions. Requires scope selection; returns 400 if none selected, 409 if outline stale, 413 if scope too large.
 
 ## Docs
 

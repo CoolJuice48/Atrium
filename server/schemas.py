@@ -283,6 +283,27 @@ class ExamGenerateRequest(BaseModel):
     seed: Optional[int] = None
 
 
+class PracticeExamScopeRequest(BaseModel):
+    outline_id: str
+    scope: Dict[str, Any] = Field(default_factory=dict)  # { item_ids: [...] }
+    options: Optional[Dict[str, Any]] = None  # { total_questions, max_pages, distribution }
+
+
+class PracticeExamQuestion(BaseModel):
+    q_type: str  # definition, fib, tf, short, list
+    prompt: str
+    answer: str
+    citations: List[Dict[str, str]] = Field(default_factory=list)
+
+
+class PracticeExamResponse(BaseModel):
+    exam_id: str
+    scope_label: str
+    resolved_ranges: List[Dict[str, int]]
+    questions: List[PracticeExamQuestion]
+    citations: List[Dict[str, str]]
+
+
 class ExamQuestion(BaseModel):
     card_id: str
     prompt: str

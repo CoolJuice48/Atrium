@@ -55,6 +55,8 @@ from server.schemas import (
     StudyReviewResponse,
     ExamGenerateRequest,
     ExamGenerateResponse,
+    PracticeExamScopeRequest,
+    PracticeExamResponse,
 )
 from server.services import (
     auth_service,
@@ -818,6 +820,51 @@ def books_post_summaries(
     except Exception as e:
         logger.exception("Scoped summary failed for book %s", book_id)
         raise HTTPException(status_code=500, detail="Summary generation failed")
+
+
+@app.post("/books/{book_id}/practice-exams", response_model=PracticeExamResponse)
+def books_post_practice_exams(
+    book_id: str,
+    body: PracticeExamScopeRequest,
+    settings: Settings = Depends(get_settings),
+):
+    """Generate scoped practice exam for selected chapters/sections."""
+    from server.services import practice_exam_service
+
+    index_root = Path(settings.index_root).resolve()
+    item_ids = body.scope.get("item_ids") or []
+    opts = body.options or {}
+    total_questions = opts.get("total_questions", 20)
+    max_pages = opts.get("max_pages", 40)
+    max_chunks = opts.get("max_chunks", 150)
+    distribution = opts.get("distribution")
+
+    try:
+        result = practice_exam_service.generate_scoped_exam(
+            index_root,
+            book_id,
+            body.outline_id,
+            item_ids,
+            total_questions=total_questions,
+            max_pages=max_pages,
+            max_chunks=max_chunks,
+            distribution=distribution,
+        )
+        return result
+    except ValueError as e:
+        msg = str(e)
+        if "Outline has changed" in msg:
+            raise HTTPException(status_code=409, detail=msg)
+        if "Select at least one" in msg or "No content found" in msg or "could not be resolved" in msg:
+            raise HTTPException(status_code=400, detail=msg)
+        if "too large" in msg.lower() or "too many chunks" in msg.lower():
+            raise HTTPException(status_code=413, detail=msg)
+        if "Too few quality" in msg or "Could not generate enough" in msg:
+            raise HTTPException(status_code=400, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except Exception as e:
+        logger.exception("Scoped practice exam failed for book %s", book_id)
+        raise HTTPException(status_code=500, detail="Practice exam generation failed")
 
 
 # ---- Catalog (lazy: loads index on first request) ----

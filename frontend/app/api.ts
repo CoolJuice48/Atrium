@@ -299,6 +299,32 @@ export function postScopedSummary(
   return post(`/books/${bookId}/summaries`, params);
 }
 
+export interface PracticeExamQuestion {
+  q_type: string;
+  prompt: string;
+  answer: string;
+  citations: { chunk_id: string; pages: string }[];
+}
+
+export interface PracticeExamResponse {
+  exam_id: string;
+  scope_label: string;
+  resolved_ranges: { start: number; end: number }[];
+  questions: PracticeExamQuestion[];
+  citations: { chunk_id: string; pages: string }[];
+}
+
+export function postScopedPracticeExam(
+  bookId: string,
+  params: {
+    outline_id: string;
+    scope: { item_ids: string[] };
+    options?: { total_questions?: number; max_pages?: number };
+  }
+): Promise<PracticeExamResponse> {
+  return post(`/books/${bookId}/practice-exams`, params);
+}
+
 export function getCatalog(): Promise<CatalogResponse> {
   return request("/catalog");
 }

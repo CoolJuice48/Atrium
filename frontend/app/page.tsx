@@ -14,6 +14,8 @@ import {
   getStudyDue,
   postStudyReview,
   postExamGenerate,
+  postScopedPracticeExam,
+  getBookOutline,
   postQuery,
   postCardsFromLastAnswer,
   postPlan,
@@ -43,6 +45,10 @@ import {
   type UploadJobStatus,
   type ExamGenerateResponse,
   type ExamQuestion,
+  type OutlineItem,
+  type OutlineResponse,
+  type PracticeExamResponse,
+  type PracticeExamQuestion,
 } from "./api";
 import { SyllabusUploadPanel } from "./SyllabusUploadPanel";
 import { ScopedSummaryPanel } from "./ScopedSummaryPanel";
@@ -1348,8 +1354,11 @@ function StudyArtifactsPanel({
 const CARD_TYPE_LABELS: Record<string, string> = {
   definition: "Definition",
   cloze: "Fill in the blank",
+  fib: "Fill in the blank",
+  tf: "True/False",
   list: "List",
   true_false: "True/False",
+  short: "Short answer",
   short_answer: "Short answer",
   compare: "Compare",
 };
@@ -1370,8 +1379,12 @@ function ExamPanel({
   const [localBooks, setLocalBooks] = useState<BookWithStudy[]>([]);
   const books = booksProp.length > 0 ? booksProp : localBooks;
   const [loadingBooks, setLoadingBooks] = useState(false);
+  const [outline, setOutline] = useState<OutlineResponse | null>(null);
+  const [loadingOutline, setLoadingOutline] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
-  const [exam, setExam] = useState<ExamGenerateResponse | null>(null);
+  const [exam, setExam] = useState<PracticeExamResponse | null>(null);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [grades, setGrades] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
@@ -1390,53 +1403,130 @@ function ExamPanel({
     }
   }, [onSelectBook, selectedBookId]);
 
+  const fetchOutline = useCallback(async () => {
+    if (!selectedBookId) return;
+    setLoadingOutline(true);
+    setError(null);
+    try {
+      const res = await getBookOutline(selectedBookId);
+      setOutline(res);
+      setExpandedChapters(new Set(res.items.filter((i) => i.level === 1).map((i) => i.id)));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load outline");
+      setOutline(null);
+    } finally {
+      setLoadingOutline(false);
+    }
+  }, [selectedBookId]);
+
   useEffect(() => {
     if (booksProp.length === 0) loadBooks();
   }, [booksProp.length, loadBooks]);
 
   useEffect(() => {
+    if (selectedBookId) fetchOutline();
+    else setOutline(null);
+  }, [selectedBookId, fetchOutline]);
+
+  useEffect(() => {
     if (!triggerGenerate) return;
     onSelectBook(triggerGenerate);
     onTriggerConsumed();
-    setGenerating(true);
-    setError(null);
-    setExam(null);
-    setRevealed(new Set());
-    setGrades({});
-    postExamGenerate(triggerGenerate, { exam_size: 20 })
-      .then(setExam)
-      .catch((e) => setError(e instanceof Error ? e.message : "Generate failed"))
-      .finally(() => setGenerating(false));
   }, [triggerGenerate, onSelectBook, onTriggerConsumed]);
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllChapters = () => {
+    if (!outline) return;
+    const chapterIds = outline.items.filter((i) => i.level === 1).map((i) => i.id);
+    setSelectedIds(new Set(chapterIds));
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const getScopePill = () => {
+    if (!outline || selectedIds.size === 0) return null;
+    const selected = outline.items.filter((i) => selectedIds.has(i.id));
+    const chapters = selected.filter((i) => i.level === 1);
+    const sections = selected.filter((i) => i.level === 2);
+    const parts: string[] = [];
+    if (chapters.length > 0) parts.push(`${chapters.length} chapter(s)`);
+    if (sections.length > 0) parts.push(`${sections.length} section(s)`);
+    return parts.length > 0 ? parts.join(", ") : null;
+  };
+
   const handleGenerate = async () => {
-    if (!selectedBookId) return;
+    if (!selectedBookId || !outline || selectedIds.size === 0) return;
     setGenerating(true);
     setError(null);
     setExam(null);
     setRevealed(new Set());
     setGrades({});
     try {
-      const res = await postExamGenerate(selectedBookId, { exam_size: 20 });
+      const res = await postScopedPracticeExam(selectedBookId, {
+        outline_id: outline.outline_id,
+        scope: { item_ids: Array.from(selectedIds) },
+        options: { total_questions: 20, max_pages: 40 },
+      });
       setExam(res);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Generate failed");
+      const msg = e instanceof Error ? e.message : "Generate failed";
+      setError(msg);
     } finally {
       setGenerating(false);
     }
   };
 
-  const toggleReveal = (cardId: string) => {
+  const toggleReveal = (key: string) => {
     setRevealed((prev) => {
       const next = new Set(prev);
-      if (next.has(cardId)) next.delete(cardId);
-      else next.add(cardId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
-  const setGrade = (cardId: string, grade: number) => {
-    setGrades((prev) => ({ ...prev, [cardId]: grade }));
+  const setGrade = (key: string, grade: number) => {
+    setGrades((prev) => ({ ...prev, [key]: grade }));
+  };
+
+  const renderOutlineItem = (item: OutlineItem, depth: number) => {
+    const isChapter = item.level === 1;
+    const children = outline!.items.filter((i) => i.parent_id === item.id);
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedChapters.has(item.id);
+    const isChecked = selectedIds.has(item.id);
+    return (
+      <div key={item.id} style={{ marginLeft: depth * 16, marginBottom: 4 }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: isChapter ? "0.95rem" : "0.85rem" }}>
+          {hasChildren && (
+            <button type="button" onClick={(e) => { e.preventDefault(); toggleExpand(item.id); }} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "0.8rem", width: 20 }}>
+              {isExpanded ? "▼" : "▶"}
+            </button>
+          )}
+          {!hasChildren && <span style={{ width: 20 }} />}
+          <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(item.id)} />
+          <span>{item.title} <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginLeft: 4 }}>(pp. {item.start_page}–{item.end_page})</span></span>
+        </label>
+        {hasChildren && isExpanded && <div style={{ marginTop: 4 }}>{children.map((c) => renderOutlineItem(c, depth + 1))}</div>}
+      </div>
+    );
   };
 
   const selectedBook = books.find((b) => b.book_id === selectedBookId);
@@ -1445,49 +1535,52 @@ function ExamPanel({
     <section className="panel">
       <h2>Practice Exam</h2>
       <p className="mb" style={{ fontSize: "0.9rem" }}>
-        Generate an exam from a book. Reveal answers and optionally grade yourself.
+        Select chapters or sections to scope your exam. Avoid generating from entire textbooks.
       </p>
       {error && <p className="error mb">{error}</p>}
       <div className="row mb">
-        <select
-          value={selectedBookId}
-          onChange={(e) => onSelectBook(e.target.value)}
-          disabled={loadingBooks}
-          style={{ maxWidth: 220 }}
-        >
+        <select value={selectedBookId} onChange={(e) => onSelectBook(e.target.value)} disabled={loadingBooks} style={{ maxWidth: 220 }}>
           <option value="">Select book</option>
           {books.map((b) => (
-            <option key={b.book_id} value={b.book_id}>
-              {b.title} ({b.chunk_count} chunks)
-            </option>
+            <option key={b.book_id} value={b.book_id}>{b.title} ({b.chunk_count} chunks)</option>
           ))}
         </select>
-        <button
-          className="primary"
-          onClick={handleGenerate}
-          disabled={generating || !selectedBookId}
-        >
-          {generating ? "Generating…" : "Generate practice exam (20)"}
-        </button>
       </div>
-      {exam && (
-        <div className="exam-block">
-          <h3 style={{ fontSize: "0.95rem", marginBottom: 8 }}>{exam.title}</h3>
-          {exam.meta.counts_by_type && Object.keys(exam.meta.counts_by_type).length > 0 && (
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 12 }}>
-              {Object.entries(exam.meta.counts_by_type)
-                .map(([t, n]) => `${CARD_TYPE_LABELS[t] ?? t}: ${n}`)
-                .join(" · ")}
-            </p>
+
+      {selectedBookId && (
+        <>
+          {loadingOutline && <p className="loading mb">Loading outline…</p>}
+          {outline && outline.items.length > 0 && (
+            <>
+              <div style={{ marginBottom: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button type="button" className="secondary" onClick={selectAllChapters}>Select all chapters</button>
+                <button type="button" className="secondary" onClick={clearSelection}>Clear</button>
+              </div>
+              <div style={{ maxHeight: 200, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 6, padding: 12, marginBottom: 12, background: "var(--bg-secondary)" }}>
+                {outline.items.filter((i) => !i.parent_id).map((item) => renderOutlineItem(item, 0))}
+              </div>
+              {getScopePill() && <p style={{ fontSize: "0.85rem", marginBottom: 8 }}><strong>Scope:</strong> {getScopePill()}</p>}
+              <button className="primary" onClick={handleGenerate} disabled={generating || selectedIds.size === 0}>
+                {generating ? "Generating…" : "Generate practice exam (20)"}
+              </button>
+              {selectedIds.size === 0 && <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: 8 }}>Select at least one chapter or section.</p>}
+            </>
           )}
+          {outline && outline.items.length === 0 && !loadingOutline && <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>No outline available.</p>}
+        </>
+      )}
+
+      {exam && (
+        <div className="exam-block mt">
+          <h3 style={{ fontSize: "0.95rem", marginBottom: 8 }}>{exam.scope_label}</h3>
           {(() => {
-            const byType = exam.exam.questions.reduce<Record<string, ExamQuestion[]>>((acc, q) => {
-              const t = q.card_type;
+            const byType = exam.questions.reduce<Record<string, PracticeExamQuestion[]>>((acc, q) => {
+              const t = q.q_type;
               if (!acc[t]) acc[t] = [];
               acc[t].push(q);
               return acc;
             }, {});
-            const typeOrder = ["definition", "cloze", "list", "true_false", "short_answer", "compare"];
+            const typeOrder = ["definition", "fib", "tf", "short", "list"];
             let globalIdx = 0;
             return (
               <ul style={{ listStyle: "none", padding: 0 }}>
@@ -1496,57 +1589,35 @@ function ExamPanel({
                   if (!qs?.length) return null;
                   return (
                     <li key={t} style={{ marginBottom: 16 }}>
-                      <h4 style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 8 }}>
-                        {CARD_TYPE_LABELS[t] ?? t} ({qs.length})
-                      </h4>
-                      {qs.map((q) => {
+                      <h4 style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: 8 }}>{CARD_TYPE_LABELS[t] ?? t} ({qs.length})</h4>
+                      {qs.map((q, i) => {
                         globalIdx += 1;
                         const idx = globalIdx;
+                        const qKey = `${q.prompt.slice(0, 50)}-${idx}`;
                         return (
-                          <div key={q.card_id} className="exam-question" style={{ marginBottom: 12, padding: 12, border: "1px solid var(--border)", borderRadius: 6 }}>
-                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                              <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                                {idx}. {CARD_TYPE_LABELS[q.card_type] ?? q.card_type}
-                              </span>
-                            </div>
-                <div className="prompt" style={{ marginTop: 6 }}>{q.prompt}</div>
-                {revealed.has(q.card_id) ? (
-                  <>
-                    <div className="answer-text mt" style={{ fontStyle: "italic", padding: 8, background: "var(--bg)", borderRadius: 4 }}>
-                      {q.answer}
-                    </div>
-                    {q.citations?.length > 0 && (
-                      <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 6 }}>
-                        {q.citations.map((c, i) => (
-                          <span key={i}>{c.chunk_id}{i < q.citations!.length - 1 ? "; " : ""}</span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="row mt" style={{ flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-                      <span style={{ fontSize: "0.85rem", marginRight: 4 }}>Grade yourself:</span>
-                      {[0, 1, 2, 3, 4, 5].map((g) => (
-                        <button
-                          key={g}
-                          className={grades[q.card_id] === g ? "primary" : "secondary"}
-                          onClick={() => setGrade(q.card_id, g)}
-                          style={{ minWidth: 32, padding: "2px 6px" }}
-                        >
-                          {g}
-                        </button>
-                      ))}
-                      {grades[q.card_id] !== undefined && (
-                        <span style={{ marginLeft: 4, fontSize: "0.85rem" }}>✓</span>
-                      )}
-                    </div>
-                    <button className="secondary mt" style={{ marginTop: 8 }} onClick={() => toggleReveal(q.card_id)}>
-                      Hide answer
-                    </button>
-                  </>
-                ) : (
-                  <button className="secondary mt" onClick={() => toggleReveal(q.card_id)}>
-                    Reveal answer
-                  </button>
-                )}
+                          <div key={qKey} className="exam-question" style={{ marginBottom: 12, padding: 12, border: "1px solid var(--border)", borderRadius: 6 }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{idx}. {CARD_TYPE_LABELS[q.q_type] ?? q.q_type}</span>
+                            <div className="prompt" style={{ marginTop: 6 }}>{q.prompt}</div>
+                            {revealed.has(qKey) ? (
+                              <>
+                                <div className="answer-text mt" style={{ fontStyle: "italic", padding: 8, background: "var(--bg)", borderRadius: 4 }}>{q.answer}</div>
+                                {q.citations?.length > 0 && (
+                                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 6 }}>
+                                    {q.citations.map((c, ci) => <span key={ci}>{c.pages ? `pp. ${c.pages}` : c.chunk_id}{ci < q.citations!.length - 1 ? "; " : ""}</span>)}
+                                  </div>
+                                )}
+                                <div className="row mt" style={{ flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                                  <span style={{ fontSize: "0.85rem", marginRight: 4 }}>Grade:</span>
+                                  {[0, 1, 2, 3, 4, 5].map((g) => (
+                                    <button key={g} className={grades[qKey] === g ? "primary" : "secondary"} onClick={() => setGrade(qKey, g)} style={{ minWidth: 32, padding: "2px 6px" }}>{g}</button>
+                                  ))}
+                                  {grades[qKey] !== undefined && <span style={{ marginLeft: 4, fontSize: "0.85rem" }}>✓</span>}
+                                </div>
+                                <button className="secondary mt" style={{ marginTop: 8 }} onClick={() => toggleReveal(qKey)}>Hide answer</button>
+                              </>
+                            ) : (
+                              <button className="secondary mt" onClick={() => toggleReveal(qKey)}>Reveal answer</button>
+                            )}
                           </div>
                         );
                       })}
