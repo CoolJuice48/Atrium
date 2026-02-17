@@ -30,6 +30,11 @@ class Settings:
     max_upload_size_mb: float = 80.0
     upload_rate_limit_per_user: int = 5  # max concurrent + recent uploads per user
 
+    # Text normalization for study artifacts (PDF extraction cleanup)
+    strong_normalize_enabled: bool = True
+    math_heavy_threshold: float = 0.30
+    dedupe_near_jaccard: float = 0.92
+
     # Local LLM (Ollama / llama.cpp) - optional polish for practice exams
     local_llm_enabled: bool = False
     local_llm_provider: str = "ollama"
@@ -100,6 +105,20 @@ class Settings:
         if self.uploads_root is None:
             self.uploads_root = project_root / "uploads"
         self.uploads_root = Path(self.uploads_root)
+
+        # Text normalization env overrides
+        if os.environ.get("STRONG_NORMALIZE_ENABLED", "").lower() in ("0", "false", "no"):
+            self.strong_normalize_enabled = False
+        try:
+            if v := os.environ.get("MATH_HEAVY_THRESHOLD"):
+                self.math_heavy_threshold = float(v)
+        except ValueError:
+            pass
+        try:
+            if v := os.environ.get("DEDUPE_NEAR_JACCARD"):
+                self.dedupe_near_jaccard = float(v)
+        except ValueError:
+            pass
 
         # Local LLM env overrides
         if os.environ.get("LOCAL_LLM_ENABLED", "").lower() in ("1", "true", "yes"):

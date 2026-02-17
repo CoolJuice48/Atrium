@@ -105,12 +105,15 @@ def build_candidate_pool(
         get_top_term,
         sentence_centrality,
     )
+    from server.services.sentence_dedupe import dedupe_sentences
+    from server.services.text_normalize_strong import normalize_for_study_artifacts
 
     candidates: List[Candidate] = []
     for chunk in chunks:
         text = chunk.get("text", "")
         if not text or not isinstance(text, str):
             continue
+        text = normalize_for_study_artifacts(text)
         meta = chunk.get("metadata", chunk)
         chunk_id = _normalize_chunk_id(chunk)
         page_start = meta.get("page_start", chunk.get("page_start"))
@@ -131,6 +134,13 @@ def build_candidate_pool(
 
     if not candidates:
         return CandidatePool(candidates=[])
+
+    deduped_texts = dedupe_sentences([c.text for c in candidates])
+    text_to_candidate = {}
+    for c in candidates:
+        if c.text not in text_to_candidate:
+            text_to_candidate[c.text] = c
+    candidates = [text_to_candidate[t] for t in deduped_texts if t in text_to_candidate]
 
     all_sentences = [c.text for c in candidates]
     term_stats = build_term_stats(all_sentences)

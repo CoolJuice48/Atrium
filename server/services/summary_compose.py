@@ -398,7 +398,11 @@ def compose_bulleted_summary(
     and optional ### Key terms.
     """
     # Filter noise (for_summary=True for stricter heading/exercise filters)
-    clean = [s for s in sentences if not is_noisy_sentence(s, for_summary=True)]
+    from server.services.text_normalize_strong import is_math_heavy
+    clean = [
+        s for s in sentences
+        if not is_noisy_sentence(s, for_summary=True) and not is_math_heavy(s)
+    ]
     if not clean:
         return "### Summary\n\nNo clear summary could be extracted from the retrieved content."
 
@@ -506,6 +510,12 @@ def compose_summary_from_chunks(
     """
     from legacy.textbook_search_offline import _format_citation
 
+    from server.services.sentence_dedupe import dedupe_sentences
+    from server.services.text_normalize_strong import (
+        is_math_heavy,
+        normalize_for_study_artifacts,
+    )
+
     # Pool text from top chunks
     all_sentences = []
     metas_by_order = []
@@ -518,12 +528,20 @@ def compose_summary_from_chunks(
             meta = {}
         if not text:
             text = meta.get("text", "")
+        text = normalize_for_study_artifacts(text)
         cleaned = clean_text(text)
         sents = split_sentences(cleaned)
         for s in sents:
             all_sentences.append((s, i, meta))
         metas_by_order.append(meta)
 
+    flat_sentences = [s for s, _, _ in all_sentences]
+    deduped_flat = dedupe_sentences(flat_sentences)
+    text_to_triple = {}
+    for s, i, meta in all_sentences:
+        if s not in text_to_triple:
+            text_to_triple[s] = (s, i, meta)
+    all_sentences = [text_to_triple[t] for t in deduped_flat if t in text_to_triple]
     flat_sentences = [s for s, _, _ in all_sentences]
     sentence_centralities = None
     sentence_top_terms = None
