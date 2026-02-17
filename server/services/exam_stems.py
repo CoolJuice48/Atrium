@@ -24,6 +24,12 @@ _PRONOUNS = frozenset(
 # Combined: first token must not be in any of these
 _TERM_FIRST_TOKEN_REJECT = _DETERMINERS | _DISCOURSE_MARKERS | _PRONOUNS
 
+# Short-answer subject: first token must not be in this reject list
+_SHORT_ANSWER_FIRST_TOKEN_REJECT = frozenset(
+    "a an the this that these those it they we he she i "
+    "any then thus however therefore because if but so also".split()
+)
+
 # Stopwords that must not begin/end stems or terms (legacy + extended)
 _STEM_STOPWORDS = frozenset(
     "a an the this that it because if but of to for with by from as is was are were "
@@ -132,5 +138,59 @@ def validate_question_stem(stem: str) -> bool:
         return False
     lower = stem.lower()
     if any(w in lower for w in ("chapter", "figure", "table", "page")):
+        return False
+    return True
+
+
+def first_content_token(s: str) -> str:
+    """
+    Return the first token of the subject in "Why <aux> <subject...>?".
+    Empty string if stem format invalid.
+    """
+    if not s or not isinstance(s, str):
+        return ""
+    s = s.strip()
+    if not s.startswith("Why ") or not s.endswith("?"):
+        return ""
+    after_why = s[4:-1].strip()
+    tokens = after_why.split()
+    if len(tokens) < 2:
+        return ""
+    return tokens[1].lower()
+
+
+def is_bad_first_token(tok: str) -> bool:
+    """True if subject first token should be rejected (determiners, pronouns, discourse)."""
+    if not tok:
+        return True
+    return tok.lower() in _SHORT_ANSWER_FIRST_TOKEN_REJECT
+
+
+def validate_short_answer_stem(stem: str) -> bool:
+    """
+    Strict validation for "Why ...?" short-answer stems.
+    Must start with "Why ", end with "?", no structural patterns, max 18 words.
+    Subject first token must be alphabetic and not in reject list.
+    """
+    if not stem or not isinstance(stem, str):
+        return False
+    stem = stem.strip()
+    if not stem.startswith("Why ") or not stem.endswith("?"):
+        return False
+    if len(stem.split()) > 18:
+        return False
+    if _BAD_RE.search(stem):
+        return False
+    lower = stem.lower()
+    if any(w in lower for w in ("chapter", "section", "figure", "table", "page")):
+        return False
+    if re.search(r"\d{4}|\bpage\s+\d+|\bpp\.\s*\d+", stem, re.I):
+        return False
+    first_tok = first_content_token(stem)
+    if not first_tok:
+        return False
+    if not first_tok[0].isalpha():
+        return False
+    if is_bad_first_token(first_tok):
         return False
     return True

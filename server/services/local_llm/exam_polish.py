@@ -18,6 +18,9 @@ async def _polish_questions_async(
     questions: List[ExamQuestion],
     provider: "LocalLLMProvider",
     settings,
+    *,
+    def_stats=None,
+    fib_stats=None,
 ) -> List[ExamQuestion]:
     """Optionally polish definition and FIB questions. Falls back to original on any error."""
     from server.services.local_llm.polish import polish_definition_question, polish_fill_in_blank
@@ -32,9 +35,14 @@ async def _polish_questions_async(
                     _extract_term_from_stem(q.prompt),
                     q.answer,
                     settings=settings,
+                    def_stats=def_stats,
                 )
                 if polished:
                     term, question, answer = polished
+                    if def_stats:
+                        orig_term = _extract_term_from_stem(q.prompt)
+                        if term.strip().lower() != orig_term.strip().lower():
+                            def_stats.local_llm_changed_term += 1
                     result.append(ExamQuestion(
                         q_type=q.q_type,
                         prompt=question,
@@ -51,6 +59,8 @@ async def _polish_questions_async(
                         source_text=None,
                     ))
             except Exception as e:
+                if def_stats:
+                    def_stats.local_llm_fallback_used += 1
                 logger.debug("Definition polish failed: %s", e)
                 result.append(ExamQuestion(
                     q_type=q.q_type,
@@ -66,9 +76,14 @@ async def _polish_questions_async(
                     q.source_text,
                     q.answer,
                     settings=settings,
+                    fib_stats=fib_stats,
                 )
                 if polished:
                     prompt_with_blank, answer = polished
+                    if fib_stats:
+                        orig_prompt = q.prompt.replace("Fill in the blank: ", "", 1)
+                        if prompt_with_blank.strip() != orig_prompt.strip():
+                            fib_stats.local_llm_changed_prompt += 1
                     result.append(ExamQuestion(
                         q_type=q.q_type,
                         prompt=f"Fill in the blank: {prompt_with_blank}",
@@ -85,6 +100,8 @@ async def _polish_questions_async(
                         source_text=None,
                     ))
             except Exception as e:
+                if fib_stats:
+                    fib_stats.local_llm_fallback_used += 1
                 logger.debug("FIB polish failed: %s", e)
                 result.append(ExamQuestion(
                     q_type=q.q_type,
@@ -115,10 +132,19 @@ def polish_exam_questions_sync(
     questions: List[ExamQuestion],
     provider: "LocalLLMProvider",
     settings,
+    *,
+    def_stats=None,
+    fib_stats=None,
 ) -> List[ExamQuestion]:
     """Run async polish from sync context. Uses asyncio.run()."""
     try:
-        return asyncio.run(_polish_questions_async(questions, provider, settings))
+        return asyncio.run(
+            _polish_questions_async(
+                questions, provider, settings,
+                def_stats=def_stats,
+                fib_stats=fib_stats,
+            )
+        )
     except Exception as e:
         logger.warning("Local LLM polish failed, using deterministic: %s", e)
         return questions

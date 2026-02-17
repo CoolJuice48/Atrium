@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -109,16 +111,39 @@ def generate_scoped_exam(
             "Try selecting more sections or a different chapter."
         )
 
-    questions = generate_exam_questions(pool, distribution=distribution, total=total_questions)
+    _debug = (
+        os.environ.get("DEBUG_EXAMS", "").lower() in ("1", "true", "yes")
+        or os.environ.get("DEBUG_ARTIFACTS", "").lower() in ("1", "true", "yes")
+    )
+    artifact_stats = None
+    if _debug:
+        from server.services.exam_stats import ExamArtifactStats
+        artifact_stats = ExamArtifactStats()
+
+    questions = generate_exam_questions(
+        pool,
+        distribution=distribution,
+        total=total_questions,
+        artifact_stats=artifact_stats,
+    )
     if use_local_llm and settings:
         from server.services.local_llm.exam_polish import polish_exam_questions_sync
         from server.services.local_llm.provider import get_provider
         provider = get_provider(settings)
         if provider:
             try:
-                questions = polish_exam_questions_sync(questions, provider, settings)
+                questions = polish_exam_questions_sync(
+                    questions,
+                    provider,
+                    settings,
+                    def_stats=artifact_stats.definition if artifact_stats else None,
+                    fib_stats=artifact_stats.fill_blank if artifact_stats else None,
+                )
             except Exception:
                 pass
+
+    if artifact_stats:
+        logging.getLogger(__name__).info("Exam stats: %s", artifact_stats.to_log_dict())
     if not questions:
         raise ValueError(
             "Could not generate enough questions from the selected scope. "

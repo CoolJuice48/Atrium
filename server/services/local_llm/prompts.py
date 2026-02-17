@@ -71,7 +71,7 @@ def polish_short_answer(
     """
     Return (system_prompt, user_prompt, schema_hint) for short-answer stem cleanup.
     """
-    system = """You are a structuring tool. Do not add facts. Only rewrite the question stem for clarity.
+    system = """You are a structuring tool. Do not add facts. Do not change meaning; only minor grammar cleanup.
 The answer must remain unchanged. Output JSON only, no markdown.
 If you cannot comply, output {"error":"reject"}."""
 

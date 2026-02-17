@@ -233,10 +233,14 @@ def test_regression_no_garbage_stems():
     ]
     pool = build_candidate_pool(chunks)
     questions = generate_exam_questions(pool, distribution={"definition": 10}, total=10)
+    bad_short_prefixes = ("Why does 4", "Why does This", "Why does then", "Why does Read")
     for q in questions:
         if q.q_type == "definition":
             for bad in bad_prefixes:
                 assert not q.prompt.startswith(bad), f"Bad stem: {q.prompt}"
+        if q.q_type == "short":
+            for bad in bad_short_prefixes:
+                assert not q.prompt.startswith(bad), f"Bad short stem: {q.prompt}"
 
 
 def test_fill_blank_does_not_break_passive_voice():

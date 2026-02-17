@@ -4,12 +4,21 @@ Deterministic practice exam question generators.
 Uses only the candidate pool. No LLM. Reallocates distribution when insufficient candidates.
 """
 
+import os
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from server.services.exam_candidates import Candidate, CandidatePool
-from server.services.exam_stems import validate_definition_term, validate_question_stem
+
+if TYPE_CHECKING:
+    from server.services.exam_short_answer import ShortAnswerStats
+    from server.services.exam_stats import DefinitionStats, ExamArtifactStats, FillBlankStats
+from server.services.exam_stems import (
+    validate_definition_term,
+    validate_question_stem,
+    validate_short_answer_stem,
+)
 from server.services.text_quality import (
     is_exercise_prompt,
     is_reference_line,
@@ -87,19 +96,25 @@ def _definition_has_verb(text: str) -> bool:
     return False
 
 
-def extract_definition_pairs(sentence: str) -> List[Tuple[str, str, str]]:
+def extract_definition_pairs(
+    sentence: str,
+    stats: Optional["DefinitionStats"] = None,
+) -> List[Tuple[str, str, str]]:
     """
     Extract (term, definition, pattern_name) from sentence.
     Only accepts sentence-initial patterns. Returns [] if no valid pair.
     """
     sentence = normalize_ws(sentence)
     if not sentence or len(sentence) < 20:
+        if stats:
+            stats.rejected_length += 1
         return []
-    # Must match from start - no mid-clause extraction
     results = []
     for pattern, name in _DEF_PATTERNS_EXPLICIT:
         m = re.match(pattern, sentence, re.IGNORECASE | re.DOTALL)
         if m:
+            if stats:
+                stats.matched_explicit_pattern += 1
             x_raw, y_raw = m.group(1).strip(), m.group(2).strip()
             term = normalize_ws(x_raw).rstrip(".,;:")
             defn = normalize_ws(y_raw).split("\n")[0]
@@ -107,15 +122,20 @@ def extract_definition_pairs(sentence: str) -> List[Tuple[str, str, str]]:
             defn = _truncate_defn(defn, 28)
             defn_words = len(defn.split())
             if defn_words < 6 or defn_words > 35:
+                if stats:
+                    stats.rejected_length += 1
                 continue
             if not _definition_has_verb(defn):
                 continue
             if is_structural_noise(defn) or is_exercise_prompt(defn) or is_reference_line(defn):
+                if stats:
+                    stats.rejected_structural += 1
                 continue
             if len(term) >= 4 and len(defn) >= 15:
+                if stats:
+                    stats.extracted_term_candidate += 1
                 results.append((term, defn, name))
-                return results  # first match wins
-    # Weaker: X is Y - only if explicit patterns failed and Y passes quality
+                return results
     m = re.match(_DEF_PATTERN_WEAK[0], sentence, re.IGNORECASE | re.DOTALL)
     if m and not results:
         x_raw, y_raw = m.group(1).strip(), m.group(2).strip()
@@ -127,6 +147,8 @@ def extract_definition_pairs(sentence: str) -> List[Tuple[str, str, str]]:
         if 6 <= defn_words <= 35 and _definition_has_verb(defn):
             if not (is_structural_noise(defn) or is_exercise_prompt(defn) or is_reference_line(defn)):
                 if len(term) >= 4 and len(defn) >= 15:
+                    if stats:
+                        stats.extracted_term_candidate += 1
                     results.append((term, defn, "is"))
     return results
 
@@ -177,7 +199,11 @@ def _final_sanity_check(q: ExamQuestion) -> bool:
     return _validate_answer(q.answer, min_words=5, max_words=30)
 
 
-def _generate_definitions(pool: CandidatePool, count: int) -> List[ExamQuestion]:
+def _generate_definitions(
+    pool: CandidatePool,
+    count: int,
+    stats: Optional["DefinitionStats"] = None,
+) -> List[ExamQuestion]:
     """Generate definition questions from definition-cue candidates. Sentence-initial only."""
     def_candidates = [c for c in pool.candidates if c.score_hint >= 2]
     questions: List[ExamQuestion] = []
@@ -185,7 +211,9 @@ def _generate_definitions(pool: CandidatePool, count: int) -> List[ExamQuestion]
     for c in def_candidates:
         if len(questions) >= count:
             break
-        pairs = extract_definition_pairs(c.text)
+        if stats:
+            stats.seen_sentences += 1
+        pairs = extract_definition_pairs(c.text, stats)
         if not pairs:
             continue
         term, defn, _ = pairs[0]
@@ -193,14 +221,22 @@ def _generate_definitions(pool: CandidatePool, count: int) -> List[ExamQuestion]
         if term_lower in seen_terms:
             continue
         if not validate_definition_term(term):
+            if stats:
+                stats.rejected_bad_first_token += 1
             continue
         stem = f"What is {term}?"
         if not validate_question_stem(stem):
+            if stats:
+                stats.rejected_validation += 1
             continue
         answer = _truncate_defn(defn)
         if not _validate_answer(answer):
+            if stats:
+                stats.rejected_validation += 1
             continue
         seen_terms.add(term_lower)
+        if stats:
+            stats.emitted += 1
         questions.append(ExamQuestion(
             q_type="definition",
             prompt=stem,
@@ -279,7 +315,11 @@ def _phrase_frequency(pool: CandidatePool, min_len: int = 1, max_len: int = 3) -
     return freq
 
 
-def _generate_fib(pool: CandidatePool, count: int) -> List[ExamQuestion]:
+def _generate_fib(
+    pool: CandidatePool,
+    count: int,
+    stats: Optional["FillBlankStats"] = None,
+) -> List[ExamQuestion]:
     """Generate fill-in-the-blank. Grammar-safe: no passive voice breaks."""
     high = [
         c for c in pool.candidates
@@ -287,7 +327,6 @@ def _generate_fib(pool: CandidatePool, count: int) -> List[ExamQuestion]:
         and 12 <= len(c.text.split()) <= 28
     ]
     freq = _phrase_frequency(pool)
-    # Prefer freq>=2, then TitleCase/domain-like (length>=5)
     def _score(phrase: str, f: int) -> int:
         s = f * 10
         if f >= 2:
@@ -306,9 +345,17 @@ def _generate_fib(pool: CandidatePool, count: int) -> List[ExamQuestion]:
             break
         if len(phrase) < 3 or len(phrase) > 25:
             continue
-        if any(w in _FIB_BLACKLIST or w in _FIB_GENERIC for w in phrase.split()):
+        if any(w in _FIB_BLACKLIST for w in phrase.split()):
+            if stats:
+                stats.rejected_stopword_phrase += 1
+            continue
+        if any(w in _FIB_GENERIC for w in phrase.split()):
+            if stats:
+                stats.rejected_generic_phrase += 1
             continue
         if phrase.isdigit():
+            if stats:
+                stats.rejected_numeric_phrase += 1
             continue
         blank = "______"
         for c in high:
@@ -316,20 +363,33 @@ def _generate_fib(pool: CandidatePool, count: int) -> List[ExamQuestion]:
                 break
             if phrase not in c.text.lower():
                 continue
+            if stats:
+                stats.seen_sentences += 1
+                stats.phrase_candidates += 1
             prompt = re.sub(re.escape(phrase), blank, c.text, count=1, flags=re.I)
             if prompt in used_prompts:
                 continue
             if _fib_blank_creates_bad_grammar(prompt):
+                if stats:
+                    stats.rejected_passive_break += 1
                 continue
             words_in_prompt = prompt.split()
             if words_in_prompt[0] == "______" or words_in_prompt[-1] == "______":
+                if stats:
+                    stats.rejected_bad_span += 1
                 continue
             if not validate_question_stem(f"Fill in the blank: {prompt}"):
+                if stats:
+                    stats.rejected_validation += 1
                 continue
             answer = phrase
             if not _validate_answer(answer, min_words=1, max_words=5):
+                if stats:
+                    stats.rejected_validation += 1
                 continue
             used_prompts.add(prompt)
+            if stats:
+                stats.emitted += 1
             questions.append(ExamQuestion(
                 q_type="fib",
                 prompt=f"Fill in the blank: {prompt}",
@@ -373,11 +433,21 @@ def _generate_tf(pool: CandidatePool, count: int) -> List[ExamQuestion]:
     return questions
 
 
-def _generate_short_answer(pool: CandidatePool, count: int) -> List[ExamQuestion]:
-    """Generate short answer from causal/explanatory candidates."""
+def _generate_short_answer(
+    pool: CandidatePool,
+    count: int,
+    stats: Optional["ShortAnswerStats"] = None,
+) -> List[ExamQuestion]:
+    """Generate short answer from causal/explanatory candidates. Grammar-aware."""
+    from server.services.exam_short_answer import generate_short_answer_from_sentence
+
+    if stats is None and _debug_exams_enabled():
+        from server.services.exam_short_answer import ShortAnswerStats
+        stats = ShortAnswerStats()
+
     causal = [
         c for c in pool.candidates
-        if any(cue in c.text.lower() for cue in ("because", "due to", "therefore", "thus", "hence"))
+        if any(cue in c.text.lower() for cue in ("because", "due to", "since", "therefore", "thus"))
         and c.score_hint >= 0
     ]
     questions: List[ExamQuestion] = []
@@ -385,25 +455,16 @@ def _generate_short_answer(pool: CandidatePool, count: int) -> List[ExamQuestion
     for c in causal:
         if len(questions) >= count:
             break
-        lower = c.text.lower()
-        if "because" in lower:
-            idx = lower.index("because")
-            before = c.text[:idx].strip()
-            after = c.text[idx:].strip()
-            stem = f"Why does {before}?"
-            answer = _truncate_defn(after, 30)
-        elif "due to" in lower:
-            idx = lower.index("due to")
-            before = c.text[:idx].strip()
-            after = c.text[idx:].strip()
-            stem = f"Why does {before}?"
-            answer = _truncate_defn(after, 30)
-        else:
-            stem = f"Explain: {c.text[:80]}..."
-            answer = _truncate_defn(c.text, 30)
+        result = generate_short_answer_from_sentence(c.text, stats)
+        if not result:
+            continue
+        stem = result["question"]
+        answer = result["answer"]
         if stem.lower() in seen:
             continue
         if not validate_question_stem(stem):
+            continue
+        if not validate_short_answer_stem(stem):
             continue
         seen.add(stem.lower())
         questions.append(ExamQuestion(
@@ -411,6 +472,7 @@ def _generate_short_answer(pool: CandidatePool, count: int) -> List[ExamQuestion
             prompt=stem,
             answer=answer,
             citations=[_make_citation(c)],
+            source_text=c.text,
         ))
     return questions
 
@@ -458,14 +520,28 @@ def _generate_list(pool: CandidatePool, count: int) -> List[ExamQuestion]:
     return questions
 
 
+def _debug_exams_enabled() -> bool:
+    """True when DEBUG_EXAMS or DEBUG_ARTIFACTS is set."""
+    v = os.environ.get("DEBUG_EXAMS", "") or os.environ.get("DEBUG_ARTIFACTS", "")
+    return v.lower() in ("1", "true", "yes")
+
+
 def generate_exam_questions(
     pool: CandidatePool,
     distribution: Optional[Dict[str, int]] = None,
     total: int = 20,
+    artifact_stats: Optional["ExamArtifactStats"] = None,
 ) -> List[ExamQuestion]:
     """
     Generate questions to match distribution. Reallocates when insufficient candidates.
     """
+    from server.services.exam_stats import (
+        DefinitionStats,
+        ExamArtifactStats,
+        FillBlankStats,
+    )
+    from server.services.exam_short_answer import ShortAnswerStats
+
     if distribution is None:
         distribution = {
             "definition": 5,
@@ -481,11 +557,25 @@ def generate_exam_questions(
         target = {k: max(1, int(v * scale)) for k, v in target.items()}
         target["definition"] += total - sum(target.values())
 
+    stats_passed = artifact_stats is not None
+    if artifact_stats is None and _debug_exams_enabled():
+        artifact_stats = ExamArtifactStats()
+
+    def _gen_def(p: CandidatePool, n: int):
+        return _generate_definitions(p, n, artifact_stats.definition if artifact_stats else None)
+
+    def _gen_fib(p: CandidatePool, n: int):
+        return _generate_fib(p, n, artifact_stats.fill_blank if artifact_stats else None)
+
+    def _gen_short(p: CandidatePool, n: int):
+        short_stats = artifact_stats.short_answer if artifact_stats else None
+        return _generate_short_answer(p, n, short_stats)
+
     generators = {
-        "definition": _generate_definitions,
-        "fib": _generate_fib,
+        "definition": _gen_def,
+        "fib": _gen_fib,
         "tf": _generate_tf,
-        "short": _generate_short_answer,
+        "short": _gen_short,
         "list": _generate_list,
     }
 
@@ -514,5 +604,9 @@ def generate_exam_questions(
                     seen_prompts.add(q.prompt)
                     results.append(q)
                     remaining -= 1
+
+    if artifact_stats and not stats_passed:
+        import logging
+        logging.getLogger(__name__).info("Exam stats: %s", artifact_stats.to_log_dict())
 
     return [_q for _q in results[:total] if _final_sanity_check(_q)]

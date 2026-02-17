@@ -34,6 +34,7 @@ async def polish_definition_question(
     definition_candidate: str,
     *,
     settings: Any = None,
+    def_stats: Any = None,
 ) -> Optional[Tuple[str, str, str]]:
     """
     Polish definition (term, question, answer). Returns (term, question, answer) or None to use deterministic.
@@ -57,6 +58,8 @@ async def polish_definition_question(
         return None
 
     system, user, schema = def_prompts(sentence, term_candidate, definition_candidate)
+    if def_stats:
+        def_stats.local_llm_attempted += 1
     sem = _get_semaphore(concurrency)
     async with sem:
         try:
@@ -68,13 +71,26 @@ async def polish_definition_question(
                 timeout_s=timeout,
             )
         except LocalLLMError as e:
+            if def_stats:
+                def_stats.local_llm_fallback_used += 1
+                if e.kind == "timeout":
+                    def_stats.local_llm_timeout += 1
+                elif e.kind == "invalid_json":
+                    def_stats.local_llm_invalid_json += 1
+                elif e.kind == "invalid_schema":
+                    def_stats.local_llm_invalid_schema += 1
             logger.debug("Local LLM definition polish failed: %s", e.kind)
             return None
 
     ok, reason = validate_definition_polish(out)
     if not ok:
+        if def_stats:
+            def_stats.local_llm_fallback_used += 1
+            def_stats.local_llm_invalid_schema += 1
         logger.debug("Definition polish validation failed: %s", reason)
         return None
+    if def_stats:
+        def_stats.local_llm_success += 1
     cache_set(model, "definition", cache_key_input, out)
     return (out["term"], out["question"], out["answer"])
 
@@ -85,6 +101,7 @@ async def polish_fill_in_blank(
     blank_phrase_candidate: str,
     *,
     settings: Any = None,
+    fib_stats: Any = None,
 ) -> Optional[Tuple[str, str]]:
     """
     Polish FIB (prompt, answer). Returns (prompt_with_blank, answer) or None to use deterministic.
@@ -107,6 +124,8 @@ async def polish_fill_in_blank(
         return None
 
     system, user, schema = fib_prompts(sentence, blank_phrase_candidate)
+    if fib_stats:
+        fib_stats.local_llm_attempted += 1
     sem = _get_semaphore(concurrency)
     async with sem:
         try:
@@ -118,12 +137,25 @@ async def polish_fill_in_blank(
                 timeout_s=timeout,
             )
         except LocalLLMError as e:
+            if fib_stats:
+                fib_stats.local_llm_fallback_used += 1
+                if e.kind == "timeout":
+                    fib_stats.local_llm_timeout += 1
+                elif e.kind == "invalid_json":
+                    fib_stats.local_llm_invalid_json += 1
+                elif e.kind == "invalid_schema":
+                    fib_stats.local_llm_invalid_schema += 1
             logger.debug("Local LLM FIB polish failed: %s", e.kind)
             return None
 
     ok, reason = validate_fill_blank_polish(out)
     if not ok:
+        if fib_stats:
+            fib_stats.local_llm_fallback_used += 1
+            fib_stats.local_llm_invalid_schema += 1
         logger.debug("FIB polish validation failed: %s", reason)
         return None
+    if fib_stats:
+        fib_stats.local_llm_success += 1
     cache_set(model, "fib", cache_key_input, out)
     return (out["prompt"], out["answer"])
